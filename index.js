@@ -1,5 +1,8 @@
-var express = require('express'),
+'use strict';
+
+const express = require('express'),
     fs = require('fs'),
+    path = require('path'),
     app = express(),
     bodyParser = require('body-parser'),
     port = process.env.APP_PORT,
@@ -9,7 +12,7 @@ var express = require('express'),
     http = require('http'),
     FileStreamRotator = require('file-stream-rotator'),
     morgan = require('morgan'),
-    logDir = process.env.LOGS_DIR || __dirname + '/logs',
+    logDir = process.env.LOGS_DIR || path.resolve(process.cwd(), 'logs'),
     Render = require('./render.js'),
     DEBUG = process.env.APP_DEBUG,
     render = Render.render;
