@@ -4,6 +4,8 @@
   "version": "0.1.0",
   "description": "Render proxy for bem projects. Render data with BEMHTML and BEMTREE",
   "main": "index.js",
+  "repository" : "https://github.com/kompolom/bem-render-proxy",
+  "homepage" : "https://github.com/kompolom/bem-render-proxy",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
