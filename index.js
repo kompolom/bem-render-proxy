@@ -63,6 +63,7 @@ app.all('*', function(req, res) {
         headers : req.headers
     },
     clientReq = http.request(opts, function (backendMessage) {
+        const COOKIE_HEADER = 'set-cookie';
         var needRender = !!backendMessage.headers['x-render'] || backendMessage.headers['content-type'] === 'application/vnd.bem+json',
             body = '';
 
@@ -76,6 +77,8 @@ app.all('*', function(req, res) {
         backendMessage.on('data', function (chunk) { body += chunk; });
         backendMessage.on('end', function () {
             res.status(backendMessage.statusCode);
+            if(this.headers[COOKIE_HEADER])
+                res.setHeader(COOKIE_HEADER, backendMessage.headers[COOKIE_HEADER]);
             render(req, res, JSON.parse(body));
         });
     });
