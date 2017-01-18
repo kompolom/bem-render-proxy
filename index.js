@@ -15,6 +15,7 @@ const express = require('express'),
     logDir = process.env.LOGS_DIR || path.resolve(process.cwd(), 'logs'),
     Render = require('./render.js'),
     DEBUG = process.env.APP_DEBUG,
+    renderContentType = 'application/bem+json',
     render = Render.render;
 
 // ensure log directory exists
@@ -53,7 +54,7 @@ if(DEBUG){
 }
 
 app.all('*', function(req, res) {
-    req.headers.accept = 'application/vnd.bem+json;' + req.headers.accept;
+    req.headers.accept = renderContentType + ';' + req.headers.accept;
     delete req.headers.host; // Удаляем оригинальный заголовок Host, чтобы web-server мог правильно определить vhost
     var opts = {
         method : req.method,
@@ -64,7 +65,7 @@ app.all('*', function(req, res) {
     },
     clientReq = http.request(opts, function (backendMessage) {
         const COOKIE_HEADER = 'set-cookie';
-        var needRender = !!backendMessage.headers['x-render'] || backendMessage.headers['content-type'] === 'application/vnd.bem+json',
+        var needRender = !!backendMessage.headers['x-render'] || backendMessage.headers['content-type'] === renderContentType,
             body = '';
 
         if(!needRender){
