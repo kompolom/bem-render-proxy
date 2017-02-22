@@ -36,8 +36,20 @@ function render(req, res, data, context) {
     if(DEBUG && query.json) return res.send('<pre>' + JSON.stringify(data, null, 4) + '</pre>');
 
     try {
-        var BEMTREE = require(path.join(pathToBundle, bundleName, `${bundleName}.${data.lang}.bemtree.js`)).BEMTREE,
-            BEMHTML = require(path.join(pathToBundle, bundleName, `${bundleName}.${data.lang}.bemhtml.js`)).BEMHTML;
+        var bemtreePath = path.join(pathToBundle, bundleName, `${bundleName}.${data.lang}.bemtree.js`),
+            bemhtmlPath = path.join(pathToBundle, bundleName, `${bundleName}.${data.lang}.bemhtml.js`),
+            BEMTREE, BEMHTML;
+
+        if(APP_ENV == 'local' && query.rebuild) {
+            var exec = require('child_process').execSync;
+            exec('./node_modules/.bin/enb make ' + path.join(platform + '.pages', bundleName), { stdio : [0,1,2] });
+            console.log('Drop templates cache');
+            delete require.cache[require.resolve(bemtreePath)];
+            delete require.cache[require.resolve(bemhtmlPath)];
+        }
+
+        BEMTREE = require(bemtreePath).BEMTREE,
+        BEMHTML = require(bemhtmlPath).BEMHTML;
     } catch (err) {
         console.error(err, err.stack);
         return res.status(424).end(data.bundleUrl + ' error'); // Попытка подключить несуществующий бандл
