@@ -80,7 +80,14 @@ app.all('*', function(req, res) {
             res.status(backendMessage.statusCode);
             if(this.headers[COOKIE_HEADER])
                 res.setHeader(COOKIE_HEADER, backendMessage.headers[COOKIE_HEADER]);
-            render(req, res, JSON.parse(body));
+            let json;
+            try {
+                json = JSON.parse(body);
+            } catch (err) {
+                console.error(err, err.stack);
+                res.status(502).end(err.message);
+            }
+            render(req, res, json);
         });
     });
 
