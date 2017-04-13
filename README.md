@@ -7,10 +7,11 @@ bem-render-proxy
 
 ## Параметры запроса
  Во режиме разработки следующие параметры можно передать в GET запросе.
- 
+
  * `json` - Отдать переданный бэкендом json без преобразований
  * `bemjson` - Применить BEMTREE шаблоны, но не применять bemhtml
  * `rebuild` - Пересобрать бандл перед подключением шаблонов
+ * `patch` - Применить патчи (из директории data/patch) к данным
 
 Пример:
 Следующий запрос пересоберет страницу /cart и вернет результат BEMTREE
@@ -18,3 +19,51 @@ bem-render-proxy
 ```
     GET myproject.dev/cart?rebuild=1&bemjson=1
 ```
+
+## Патчи данных
+
+Патчи служат для модификации данных от сервера, чтобы не ждать обновления API на стороне backend.
+
+### Формат патча
+```js
+// data/patch/my-path.js
+module.exports = (data) => {
+    data.feature = { test: 'data' }
+}
+```
+
+### Использование
+```
+GET myproject.dev/?patch=my-path
+```
+
+```js
+// Данные от backend
+{
+    a: 10,
+    b: 20
+}
+```
+
+```js
+// Данные после патча
+{
+    a: 10,
+    b: 20,
+    feature: { test: 'data' }
+}
+```
+
+#### Работа с нескольки патчами
+
+```
+GET myproject.dev/?patch=feature1;feature2
+```
+
+Данные от сервера пройдут обработку последовательно через
+
+```
+1: data/patch/feature1.js
+2: data/patch/feature2.js
+```
+
