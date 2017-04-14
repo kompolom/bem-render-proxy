@@ -14,7 +14,9 @@ const express = require('express'),
     morgan = require('morgan'),
     logDir = process.env.LOGS_DIR || path.resolve(process.cwd(), 'logs'),
     Render = require('./render.js'),
+    applyPatches = require('./apply-patches'),
     DEBUG = process.env.APP_DEBUG,
+    APP_ENV = process.env.APP_ENV,
     renderContentType = 'application/bem+json',
     render = Render.render;
 
@@ -80,14 +82,21 @@ app.all('*', function(req, res) {
             res.status(backendMessage.statusCode);
             if(this.headers[COOKIE_HEADER])
                 res.setHeader(COOKIE_HEADER, backendMessage.headers[COOKIE_HEADER]);
-            let json;
+
+            let data;
+
             try {
-                json = JSON.parse(body);
+                data = JSON.parse(body);
             } catch (err) {
                 console.error(err, err.stack);
                 res.status(502).end(err.message);
             }
-            render(req, res, json);
+
+            if (APP_ENV === 'local') {
+                applyPatches(req, res, data);
+            }
+
+            render(req, res, data);
         });
     });
 
