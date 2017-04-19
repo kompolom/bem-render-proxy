@@ -1,15 +1,28 @@
 'use strict';
 
 const path = require('path'),
+    fs = require('fs'),
     isDev = process.env.NODE_ENV === 'development',
     useCache = !isDev,
     APP_ENV = process.env.APP_ENV,
     DEBUG = process.env.APP_DEBUG,
     DEFAULT_LANG = process.env.DEFAULT_LANG,
     cacheTTL = process.env.CACHE_TTL,
-    staticRoot = process.env.STATIC_ROOT;
+    staticRoot = process.env.STATIC_ROOT,
+    NORMALIZE_FREEZE_URLS = process.env.NORMALIZE_FREEZE_URLS,
+    FreezeMap = require('./freeze-map'),
+    freezeMapFile = path.resolve(process.env.FREEZE_MAP || '');
 
-var cache = {};
+var cache = {},
+    freezeMap = new FreezeMap();
+
+try {
+    let map = require.main.require(freezeMapFile);
+    freezeMap = new FreezeMap(map , NORMALIZE_FREEZE_URLS);
+} catch (e) {
+    console.log('unable to load freeze map', '\n', e);
+}
+
 
 function render(req, res, data, context) {
     if(DEBUG && res.statusCode === 500 && APP_ENV === 'local') // FIXME remove this
@@ -28,6 +41,7 @@ function render(req, res, data, context) {
         bundleName = `page_${scope}_${view}`;
 
         // Утанавливает url для статики
+        data.platform = platform;
         data.bundleUrl = path.join(`${staticRoot}${platform}.pages`, bundleName, bundleName);
         data.lang  || (data.lang =  DEFAULT_LANG || 'ru');
 
@@ -59,6 +73,16 @@ function render(req, res, data, context) {
         return res.send(cached.html);
     }
 
+    // в dev режиме перечитываем файл каждый раз
+    if(isDev) {
+        try {
+            let map = JSON.parse(fs.readFileSync(freezeMapFile, 'utf-8'));
+            freezeMap = new FreezeMap(map, NORMALIZE_FREEZE_URLS);
+        } catch (e) {
+            console.log('Unable to load', freezeMapFile, '\n', e);
+        }
+    }
+
     var bemtreeCtx = {
         block : 'root',
         context : context,
@@ -69,6 +93,7 @@ function render(req, res, data, context) {
     };
 
     try {
+        BEMTREE.BEMContext.prototype.getFreezed = url => freezeMap.linkTo(url);
         var bemjson = BEMTREE.apply(bemtreeCtx);
     } catch(err) {
         console.error('BEMTREE error', err.stack);
