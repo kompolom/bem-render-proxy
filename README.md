@@ -67,3 +67,45 @@ GET myproject.dev/?patch=feature1;feature2
 2: data/patch/feature2.js
 ```
 
+## Заморозка статики
+
+Прокси умеет отдавать правильные ссылки на замороженые ресурсы используя json карту соответсвия.
+Для указания файла с картой используется переменная окружения `FREEZE_MAP` с указанием пути до карты относительно корня проекта.
+переменная окружения `NORMALIZE_FREEZE_URLS` позволяет использовать карту с windows путями, однако добавляет оверхед.
+Не рекомендуется использовать эту опцию в production окружении
+
+### Генерация карты кода
+
+Для генерации карты можно использовать `borschik`:
+
+```bash
+$ borschik freeze --input=js > freeze-info.json
+```
+
+Подробнее в документации к [borschik](https://github.com/bem-site/bem-method/blob/bem-info-data/articles/borschik/borschik.ru.md#Полная-заморозка)
+
+### Использование в шаблонах
+
+В BEMTREE становится доступна функция `getFreezed()`
+
+Пример:
+
+```javascript
+// FREEZEMAP
+{
+    "my-scripts/long/link/index.min.js" : "./freezed/_/dsdgjlka342jfsgjslkgjs41jgls1k8gjslkgs.js"
+}
+
+// BEMTREE
+block('page')(
+    content()((node, ctx) => [{
+        scripts: [{ elem: 'js', url: node.getFreezed('my-scripts/long/link/index.min.js') }],
+    }])
+)
+
+// BEMJSON
+{
+    block : 'page'
+    scripts: [{ elem: 'js', url: './freezed/_/dsdgjlka342jfsgjslkgjs41jgls1k8gjslkgs.js' }],
+}
+```
