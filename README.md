@@ -106,6 +106,24 @@ block('page')(
 // BEMJSON
 {
     block : 'page'
-    scripts: [{ elem: 'js', url: './freezed/_/dsdgjlka342jfsgjslkgjs41jgls1k8gjslkgs.js' }],
+    scripts: [{ elem: 'js', url: './freezed/_/dsdgjlka342jfsgjslkgjs41jgls1k8gjslkgs.js' }]
 }
 ```
+
+## Схемы именования бандлов
+
+Поддерживается произвольная схема именования бандлов.
+Чтобы задать схему бандлов можно использовать переменные окружения `BUNDLE_FORMAT`, и `PAGE_FORMAT` чтобы сконфигурировать
+формат бандла и страницы соответственно.
+
+Значения по умолчанию:
+
+```
+BUNDLE_FORMAT='{platform}.pages'
+PAGE_FORMAT='page_{scope}_{view}'
+```
+
+Где
+ - `{platform}` платформа запрашиваемой страницы. По умолчанию desktop
+ - `{scope}` раздел сайта. Например public, admin, error
+ - `{view}` имя страницы. По умолчанию index
