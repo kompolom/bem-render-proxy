@@ -22,7 +22,7 @@ class FreezeMapper {
             return url;
         }
 
-        return this._map[url] || unfreezed;
+        return this._map[url] || url;
     }
 
     _unix2win(url) {

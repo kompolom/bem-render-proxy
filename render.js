@@ -8,10 +8,14 @@ const path = require('path'),
     DEBUG = process.env.APP_DEBUG,
     DEFAULT_LANG = process.env.DEFAULT_LANG,
     cacheTTL = process.env.CACHE_TTL,
-    staticRoot = process.env.STATIC_ROOT,
+    STATIC_ROOT = process.env.STATIC_ROOT,
     NORMALIZE_FREEZE_URLS = process.env.NORMALIZE_FREEZE_URLS,
     FreezeMap = require('./freeze-map'),
-    freezeMapFile = path.resolve(process.env.FREEZE_MAP || '');
+    freezeMapFile = path.resolve(process.env.FREEZE_MAP || ''),
+    BUNDLE_FORMAT = process.env.BUNDLE_FORMAT || '{platform}.pages',
+    PAGE_FORMAT = process.env.PAGE_FORMAT || 'page_{scope}_{view}',
+    BundleScheme = require('./bundle-scheme'),
+    bundle = new BundleScheme(BUNDLE_FORMAT, PAGE_FORMAT, STATIC_ROOT);
 
 var cache = {},
     freezeMap = new FreezeMap();
@@ -31,18 +35,16 @@ function render(req, res, data, context) {
     var query = req.query,
         user = req.user,
         cacheKey = req.url + (context? JSON.stringify(context) : '') + (user? JSON.stringify(user) : ''),
-        cached = cache[cacheKey],
+        cached = cache[cacheKey];
 
         // Выбор бандла и платформы
-        platform = data.platform || 'desktop',
-        scope = data.bundle || 'shop',
-        view = data.page || 'home',
-        pathToBundle = path.resolve(platform + '.pages'),
-        bundleName = `page_${scope}_${view}`;
+        bundle.platform = data.platform || 'desktop',
+        bundle.scope = data.bundle || '',
+        bundle.view = data.page || 'index',
 
         // Утанавливает url для статики
-        data.platform = platform;
-        data.bundleUrl = path.join(`${staticRoot}${platform}.pages`, bundleName, bundleName);
+        data.platform = bundle.platform;
+        data.bundleUrl = bundle.baseUrl;
         data.lang  || (data.lang =  DEFAULT_LANG || 'ru');
 
     recordRenderTime.call(req);
@@ -50,13 +52,13 @@ function render(req, res, data, context) {
     if(DEBUG && query.json) return res.send('<pre>' + JSON.stringify(data, null, 4) + '</pre>');
 
     try {
-        var bemtreePath = path.join(pathToBundle, bundleName, `${bundleName}.${data.lang}.bemtree.js`),
-            bemhtmlPath = path.join(pathToBundle, bundleName, `${bundleName}.${data.lang}.bemhtml.js`),
+        var bemtreePath = bundle.getFile('bemtree.js', data.lang),
+            bemhtmlPath = bundle.getFile('bemhtml.js', data.lang),
             BEMTREE, BEMHTML;
 
         if(APP_ENV == 'local' && query.rebuild) {
             var exec = require('child_process').execSync;
-            exec('./node_modules/.bin/enb make ' + path.join(platform + '.pages', bundleName), { stdio : [0,1,2] });
+            exec('./node_modules/.bin/enb make ' + bundle.bundle, { stdio : [0,1,2] });
             console.log('Drop templates cache');
             delete require.cache[require.resolve(bemtreePath)];
             delete require.cache[require.resolve(bemhtmlPath)];
@@ -74,7 +76,8 @@ function render(req, res, data, context) {
     }
 
     // в dev режиме перечитываем файл каждый раз
-    if(isDev) {
+    if(DEBUG) {
+        console.log('Try to read freeze map', freezeMapFile);
         try {
             let map = JSON.parse(fs.readFileSync(freezeMapFile, 'utf-8'));
             freezeMap = new FreezeMap(map, NORMALIZE_FREEZE_URLS);
