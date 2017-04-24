@@ -8,7 +8,7 @@ const path = require('path'),
     DEBUG = process.env.APP_DEBUG,
     DEFAULT_LANG = process.env.DEFAULT_LANG,
     cacheTTL = process.env.CACHE_TTL,
-    STATIC_ROOT = process.env.STATIC_ROOT,
+    STATIC_ROOT = process.env.STATIC_ROOT || '/',
     NORMALIZE_FREEZE_URLS = process.env.NORMALIZE_FREEZE_URLS,
     FreezeMap = require('./freeze-map'),
     freezeMapFile = path.resolve(process.env.FREEZE_MAP || ''),
@@ -22,10 +22,12 @@ var cache = {},
 
 try {
     let map = require.main.require(freezeMapFile);
-    freezeMap = new FreezeMap(map , NORMALIZE_FREEZE_URLS);
+    freezeMap = new FreezeMap(map, NORMALIZE_FREEZE_URLS);
 } catch (e) {
-    console.log('unable to load freeze map', '\n', e);
+    console.log('Unable to load freeze map', '\n', e.message);
 }
+
+console.log('Run in', APP_ENV.toUpperCase(), 'mode');
 
 
 function render(req, res, data, context) {
@@ -38,9 +40,9 @@ function render(req, res, data, context) {
         cached = cache[cacheKey];
 
         // Выбор бандла и платформы
-        bundle.platform = data.platform || 'desktop',
-        bundle.scope = data.bundle || '',
-        bundle.view = data.page || 'index',
+        bundle.platform = data.platform || 'desktop';
+        bundle.scope = data.bundle || '';
+        bundle.view = data.page || 'index';
 
         // Утанавливает url для статики
         data.platform = bundle.platform;
@@ -76,27 +78,29 @@ function render(req, res, data, context) {
     }
 
     // в dev режиме перечитываем файл каждый раз
-    if(DEBUG) {
+    if(APP_ENV === 'local') {
         console.log('Try to read freeze map', freezeMapFile);
         try {
             let map = JSON.parse(fs.readFileSync(freezeMapFile, 'utf-8'));
             freezeMap = new FreezeMap(map, NORMALIZE_FREEZE_URLS);
         } catch (e) {
-            console.log('Unable to load', freezeMapFile, '\n', e);
+            console.log('Unable to load', freezeMapFile, '\n', e.message);
         }
     }
 
     var bemtreeCtx = {
         block : 'root',
         context : context,
+        bundleScheme : bundle,
         // extend with data needed for all routes
         data : Object.assign({}, {
-            url : req._parsedUrl
+            url : req._parsedUrl,
         }, data)
     };
 
     try {
         BEMTREE.BEMContext.prototype.getFreezed = url => freezeMap.linkTo(url);
+        BEMTREE.BEMContext.prototype.useMerges = APP_ENV === 'production';
         var bemjson = BEMTREE.apply(bemtreeCtx);
     } catch(err) {
         console.error('BEMTREE error', err.stack);

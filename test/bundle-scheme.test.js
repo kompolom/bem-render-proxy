@@ -48,6 +48,11 @@ describe('bundle-scheme', function() {
             bundleScheme.view = 'index';
             bundleScheme.getFileUrl('js', 'ru').should.be.equal('desktop.pages/page_shop_index/page_shop_index.ru.js');
         });
+
+        it('static Root should have value', function() {
+            let bs = new BundleScheme(scheme, page, 'http://abc.com/');
+            bs.staticRoot.should.be.equal('http://abc.com/')
+        });
     });
 
     describe('pages/{platform}/page_{scope}_{view}', function() {

@@ -1,9 +1,10 @@
 const path = require('path');
 
 class BundleScheme {
-    constructor(bundleFormat, pageFormat){
+    constructor(bundleFormat, pageFormat, staticRoot = '/'){
         this.bundleFormat = bundleFormat;
         this.pageFormat = pageFormat;
+        this.staticRoot = staticRoot;
     }
 
     set platform(name) { this._platform = name; }
