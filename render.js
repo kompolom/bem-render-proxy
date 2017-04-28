@@ -61,6 +61,9 @@ function render(req, res, data, context) {
         if(APP_ENV == 'local' && query.rebuild) {
             var exec = require('child_process').execSync;
             exec('./node_modules/.bin/enb make ' + bundle.bundle, { stdio : [0,1,2] });
+        }
+
+        if(APP_ENV === 'local') {
             console.log('Drop templates cache');
             delete require.cache[require.resolve(bemtreePath)];
             delete require.cache[require.resolve(bemhtmlPath)];
