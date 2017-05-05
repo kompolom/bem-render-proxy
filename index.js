@@ -70,6 +70,9 @@ app.all('*', function(req, res) {
         var needRender = !!backendMessage.headers['x-render'] || backendMessage.headers['content-type'] === renderContentType,
             body = '';
 
+        // Для правильного разбиения чанков
+        backendMessage.setEncoding('utf8');
+
         if(!needRender){
             res.writeHead(backendMessage.statusCode, backendMessage.headers);
             backendMessage.on('data', (chunk) => {res.write(chunk);});
