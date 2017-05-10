@@ -98,6 +98,7 @@ function render(req, res, data, context) {
         // extend with data needed for all routes
         data : Object.assign({}, {
             url : req._parsedUrl,
+            api_url : process.env.API_URL
         }, data)
     };
 
