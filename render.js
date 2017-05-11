@@ -49,6 +49,10 @@ function render(req, res, data, context) {
         data.bundleUrl = bundle.baseUrl;
         data.lang  || (data.lang =  DEFAULT_LANG || 'ru');
 
+        // Окружение и дополнительная информация
+        data.env = process.env;
+        data.query = query;
+
     recordRenderTime.call(req);
 
     if(DEBUG && query.json) return res.send('<pre>' + JSON.stringify(data, null, 4) + '</pre>');
@@ -95,11 +99,7 @@ function render(req, res, data, context) {
         block : 'root',
         context : context,
         bundleScheme : bundle,
-        // extend with data needed for all routes
-        data : Object.assign({}, {
-            url : req._parsedUrl,
-            api_url : process.env.API_URL
-        }, data)
+        data : data
     };
 
     try {
