@@ -55,7 +55,11 @@ function render(req, res, data, context) {
 
     recordRenderTime.call(req);
 
-    if(DEBUG && query.json) return res.send('<pre>' + JSON.stringify(data, null, 4) + '</pre>');
+    if(DEBUG && query.json) {
+        let json = require('./json-cut')(data, query.json);
+
+        return res.send('<pre>' + JSON.stringify(json, null, 4) + '</pre>');
+    }
 
     try {
         var bemtreePath = bundle.getFile('bemtree.js', data.lang),
