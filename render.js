@@ -30,7 +30,7 @@ try {
 console.log('Run in', APP_ENV.toUpperCase(), 'mode');
 
 
-function render(req, res, data, context) {
+function render(req, res, data, context, errorsHandler) {
     if(DEBUG && res.statusCode === 500 && APP_ENV === 'local') // FIXME remove this
         return res.send('<pre>' + JSON.stringify(data, null, 4) + '</pre>');
 
@@ -80,8 +80,11 @@ function render(req, res, data, context) {
         BEMTREE = require(bemtreePath).BEMTREE,
         BEMHTML = require(bemhtmlPath).BEMHTML;
     } catch (err) {
-        console.error(err, err.stack);
-        return res.status(424).end(data.bundleUrl + ' error'); // Попытка подключить несуществующий бандл
+        return errorsHandler(req, res, {
+            code : 424,
+            type : data.bundleUrl + ' error',
+            error : err,
+        });
     }
 
     if(useCache && cached && (new Date() - cached.timestamp < cacheTTL)) {
@@ -111,9 +114,12 @@ function render(req, res, data, context) {
         BEMTREE.BEMContext.prototype.useMerges = APP_ENV === 'production';
         var bemjson = BEMTREE.apply(bemtreeCtx);
     } catch(err) {
-        console.error('BEMTREE error', err.stack);
-        console.trace('server stack');
-        return res.status(500).send(err);
+        return errorsHandler(req, res, {
+            code : 500,
+            type : 'BEMTREE error',
+            error : err,
+            data : data
+        });
     }
 
     if(DEBUG && query.bemjson) return res.send('<pre>' + JSON.stringify(bemjson, null, 4) + '</pre>');
@@ -121,8 +127,12 @@ function render(req, res, data, context) {
     try {
         var html = BEMHTML.apply(bemjson);
     } catch(err) {
-        console.error('BEMHTML error', err.stack);
-        return res.status(500).send(err);
+        return errorsHandler(req, res, {
+            code : 500,
+            type : 'BEMHTML error',
+            error : err,
+            data : data
+        });
     }
 
     useCache && (cache[cacheKey] = {
