@@ -8,7 +8,8 @@ const
             user: env.LOGMAIL_USERNAME,
             pass: env.LOGMAIL_PASSWORD
         }
-    });
+    }),
+    zlib = require('zlib');
 
 function errorsHandler(req, res, opts) {
     console.log(opts.error, opts.error.stack);
@@ -42,16 +43,30 @@ function errorsHandler(req, res, opts) {
         // Для безопасности
         delete opts.data.env;
 
-        mailOptions.attachments = [
-            {
-                filename: 'data.json',
-                content: new Buffer(JSON.stringify(opts.data), 'utf8')
-            }
-        ]
-    }
+        let buf = new Buffer(JSON.stringify(opts.data, null, 4), 'utf8');
 
-    mailer.sendMail(mailOptions, (error, info) => {
-        if (error) {
+        zlib.gzip(buf, (error, result) => {
+            if(error) {
+                console.log(error, error.stack);
+            }
+
+            mailOptions.attachments = [
+                {
+                    filename : 'data.json.gz',
+                    content : result
+                }
+            ];
+
+            sendMail(mailOptions);
+        });
+    } else {
+        sendMail(mailOptions);
+    }
+}
+
+function sendMail(opts) {
+    mailer.sendMail(opts, (error, info) => {
+        if(error) {
             return console.log(error);
         }
         console.log('Message %s sent: %s', info.messageId, info.response);
