@@ -5,20 +5,22 @@ const express = require('express'),
     path = require('path'),
     app = express(),
     bodyParser = require('body-parser'),
-    port = process.env.APP_PORT,
-    backendHost = process.env.BACKEND_HOST,
-    backendPort = process.env.BACKEND_PORT,
+    env = process.env,
+    port = env.APP_PORT,
+    backendHost = env.BACKEND_HOST,
+    backendPort = env.BACKEND_PORT,
     isSocket = isNaN(port),
     http = require('http'),
     FileStreamRotator = require('file-stream-rotator'),
     morgan = require('morgan'),
-    logDir = process.env.LOGS_DIR || path.resolve(process.cwd(), 'logs'),
+    logDir = env.LOGS_DIR || path.resolve(process.cwd(), 'logs'),
     Render = require('./render.js'),
     applyPatches = require('./apply-patches'),
-    DEBUG = process.env.APP_DEBUG,
-    APP_ENV = process.env.APP_ENV,
+    DEBUG = env.APP_DEBUG,
+    APP_ENV = env.APP_ENV,
     renderContentType = 'application/bem+json',
-    render = Render.render;
+    render = Render.render,
+    errorsHandler = require('./errors-handler');
 
 // ensure log directory exists
 fs.existsSync(logDir) || fs.mkdirSync(logDir);
@@ -91,22 +93,36 @@ app.all('*', function(req, res) {
             try {
                 data = JSON.parse(body);
             } catch (err) {
-                console.error(err, err.stack);
-                res.status(502).end(err.message);
+                return errorsHandler(req, res, {
+                    code : 502,
+                    type : 'SERVER JSON error',
+                    error : err
+                });
             }
 
             if (APP_ENV === 'local') {
                 applyPatches(req, res, data);
             }
 
-            render(req, res, data);
+            try {
+                render(req, res, data, null, errorsHandler);
+            } catch (e) {
+                return errorsHandler(req, res, {
+                    code : 500,
+                    type : 'RENDER error',
+                    error : e,
+                    data : data
+                });
+            }
         });
     });
 
     clientReq.on('error', function(e){
-        res.sendStatus(502);
-        res.end();
-        console.log(e);
+        errorsHandler(req, res, {
+            code : '502',
+            type : 'SERVER error',
+            error : e
+        });
     });
 
     req.on('data', (chunk) => { clientReq.write(chunk); });

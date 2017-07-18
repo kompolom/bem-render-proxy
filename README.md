@@ -127,3 +127,7 @@ PAGE_FORMAT='page_{scope}_{view}'
  - `{platform}` платформа запрашиваемой страницы. По умолчанию desktop
  - `{scope}` раздел сайта. Например public, admin, error
  - `{view}` имя страницы. По умолчанию index
+
+
+## Отправка ошибок по email
+Смотри пример настроек в .env.example (LOGMAIL)
