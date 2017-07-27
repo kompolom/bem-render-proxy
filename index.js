@@ -57,6 +57,7 @@ if(DEBUG){
 
 app.all('*', function(req, res) {
     req.headers.accept = renderContentType + ';' + req.headers.accept;
+    req.headers['X-Forwarded-Host'] = req.headers.host;
     delete req.headers.host; // Удаляем оригинальный заголовок Host, чтобы web-server мог правильно определить vhost
     var opts = {
         method : req.method,
