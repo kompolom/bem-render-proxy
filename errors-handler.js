@@ -9,14 +9,69 @@ const
             pass: env.LOGMAIL_PASSWORD
         }
     }),
+    request = require('request'),
     zlib = require('zlib');
+
+
+function sendToSlack(data) {
+    request.post(env.LOGMAIL_SLACK_WEBHOOK, { json : {
+        username : env.LOGMAIL_FROM_NAME,
+        channel : env.LOGMAIL_SLACK_CHANNEL,
+        icon_emoji : ':scream_cat:',
+        attachments : [
+            {
+                color : "#f00",
+                fields : [
+                    {
+                        title : "Code:",
+                        value : data.code,
+                    },
+                    {
+                        title : "Type:",
+                        value : data.type,
+                    },
+                    {
+                        title : "Message:",
+                        value : data.error.message,
+                    },
+                    {
+                        title : "Path:",
+                        value : data.path
+                    },
+                    {
+                        title: "Server:",
+                        value: env.SERVER_BUILD_VERSION
+                    },
+                    {
+                        title : "Front:",
+                        value : env.FRONT_BUILD_VERSION
+                    },
+                ],
+                footer: "BEM RENDER PROXY"
+            },
+            {
+                color : "#0B0",
+                fields : [
+                    {
+                        title : "More info sent to:",
+                        value : env.LOGMAIL_TO_ADDRESS
+                            .split(',')
+                            .map((email) => email.trim())
+                            .join(', ')
+                    }
+                ]
+            }
+        ]
+    } }, (err) => console.error(err));
+}
 
 function errorsHandler(req, res, opts) {
     console.log(opts.error, opts.error.stack);
 
     opts = Object.assign({
         code : 500,
-        type : 'Error'
+        type : 'Error',
+        path : req.originalUrl
     }, opts);
 
     res
@@ -34,7 +89,7 @@ function errorsHandler(req, res, opts) {
         text : [
             'server: ' + env.SERVER_BUILD_VERSION,
             'front: ' + env.FRONT_BUILD_VERSION,
-            'path: ' + req.originalUrl,
+            'path: ' + opts.path,
             'error stack: ' + opts.error.stack
         ].join('\n')
     };
@@ -61,6 +116,10 @@ function errorsHandler(req, res, opts) {
         });
     } else {
         sendMail(mailOptions);
+    }
+
+    if(env.LOGMAIL_SLACK_WEBHOOK) {
+        sendToSlack(opts)
     }
 }
 

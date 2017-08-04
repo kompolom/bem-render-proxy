@@ -18,7 +18,8 @@
     "express": "^4.13.3",
     "file-stream-rotator": "0.0.7",
     "morgan": "^1.6.1",
-    "nodemailer": "^4.0.1"
+    "nodemailer": "^4.0.1",
+    "request": "^2.81.0"
   },
   "devDependencies": {
     "mocha": "^3.2.0",
