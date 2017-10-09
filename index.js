@@ -5,6 +5,8 @@ const express = require('express'),
     path = require('path'),
     app = express(),
     bodyParser = require('body-parser'),
+    cookieParser = require('cookie-parser'),
+    setCookieParser = require('set-cookie-parser'),
     env = process.env,
     port = env.APP_PORT,
     backendHost = env.BACKEND_HOST,
@@ -51,6 +53,7 @@ app
     .disable('x-powered-by')
     .disable('E-tag')
     .use(morgan(':method :url :status - :response-time ms (render :render-time ms)', { stream : accessLogStream }))
+    .use(cookieParser())
     .use(bodyParser.json());
 
 if(DEBUG){
@@ -69,7 +72,7 @@ app.all('*', function(req, res) {
         headers : req.headers
     },
     clientReq = http.request(opts, function (backendMessage) {
-        const COOKIE_HEADER = 'set-cookie';
+        const SET_COOKIE_HEADER = 'set-cookie';
         var needRender = !!backendMessage.headers['x-render'] || backendMessage.headers['content-type'] === renderContentType,
             body = '';
 
@@ -86,8 +89,23 @@ app.all('*', function(req, res) {
         backendMessage.on('data', function (chunk) { body += chunk; });
         backendMessage.on('end', function () {
             res.status(backendMessage.statusCode);
-            if(this.headers[COOKIE_HEADER])
-                res.setHeader(COOKIE_HEADER, backendMessage.headers[COOKIE_HEADER]);
+            if(this.headers[SET_COOKIE_HEADER]) {
+                res.setHeader(SET_COOKIE_HEADER, backendMessage.headers[SET_COOKIE_HEADER]);
+
+                // Актуализация req.cookies
+                setCookieParser(backendMessage).forEach((cookie) => {
+                    const
+                        expires = new Date(cookie.expires),
+                        now = new Date();
+
+                    if(expires < now) {
+                        delete req.cookies[cookie.name];
+                        return;
+                    }
+
+                    req.cookies[cookie.name] = cookie.value;
+                });
+            }
 
             let data;
 
