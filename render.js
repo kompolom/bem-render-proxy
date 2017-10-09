@@ -35,6 +35,7 @@ function render(req, res, data, context, errorsHandler) {
         return res.send('<pre>' + JSON.stringify(data, null, 4) + '</pre>');
 
     var query = req.query,
+        cookies = req.cookies,
         user = req.user,
         cacheKey = req.url + (context? JSON.stringify(context) : '') + (user? JSON.stringify(user) : ''),
         cached = cache[cacheKey];
@@ -52,6 +53,7 @@ function render(req, res, data, context, errorsHandler) {
         // Окружение и дополнительная информация
         data.env = process.env;
         data.query = query;
+        data.cookies = cookies;
 
     recordRenderTime.call(req);
 
