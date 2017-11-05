@@ -3,11 +3,12 @@
 const path = require('path'),
     fs = require('fs'),
     isDev = process.env.NODE_ENV === 'development',
-    useCache = !isDev,
+    cacheTTL = process.env.CACHE_TTL,
+    CACHE_SIZE = process.env.CACHE_SIZE || 1000,
+    USE_CACHE = !!process.env.USE_CACHE,
     APP_ENV = process.env.APP_ENV,
     DEBUG = process.env.APP_DEBUG,
     DEFAULT_LANG = process.env.DEFAULT_LANG,
-    cacheTTL = process.env.CACHE_TTL,
     STATIC_ROOT = process.env.STATIC_ROOT || '/',
     NORMALIZE_FREEZE_URLS = process.env.NORMALIZE_FREEZE_URLS,
     FreezeMap = require('./freeze-map'),
@@ -17,8 +18,10 @@ const path = require('path'),
     BundleScheme = require('./bundle-scheme'),
     bundle = new BundleScheme(BUNDLE_FORMAT, PAGE_FORMAT, STATIC_ROOT);
 
-var cache = {},
+var cache = new Map(),
     freezeMap = new FreezeMap();
+
+setInterval(clearOldCacheEntries, cacheTTL);
 
 try {
     let map = require.main.require(freezeMapFile);
@@ -28,24 +31,25 @@ try {
 }
 
 console.log('Run in', APP_ENV.toUpperCase(), 'mode');
+console.log('USE_CACHE:', USE_CACHE);
 
 
 function render(req, res, data, context, errorsHandler) {
     if(DEBUG && res.statusCode === 500 && APP_ENV === 'local') // FIXME remove this
-        return res.send('<pre>' + JSON.stringify(data, null, 4) + '</pre>');
+        return res.send(`<pre>${JSON.stringify(data, null, 4)}</pre>`);
 
     var query = req.query,
         cookies = req.cookies,
-        user = req.user,
-        cacheKey = req.url + (context? JSON.stringify(context) : '') + (user? JSON.stringify(user) : ''),
-        cached = cache[cacheKey];
+        user = data.data.user,
+        cacheKey = JSON.stringify({ url : req.url, user }),
+        cached = cache.get(cacheKey);
 
         // Выбор бандла и платформы
         bundle.platform = data.platform || 'desktop';
         bundle.scope = data.bundle || '';
         bundle.view = data.page || 'index';
 
-        // Утанавливает url для статики
+        // Устанавливает url для статики
         data.platform = bundle.platform;
         data.bundleUrl = bundle.baseUrl;
         data.lang  || (data.lang =  DEFAULT_LANG || 'ru');
@@ -60,7 +64,7 @@ function render(req, res, data, context, errorsHandler) {
     if(DEBUG && query.json) {
         let json = require('./json-cut')(data, query.json);
 
-        return res.send('<pre>' + JSON.stringify(json, null, 4) + '</pre>');
+        return res.send(`<pre>${JSON.stringify(json, null, 4)}</pre>`);
     }
 
     try {
@@ -68,7 +72,7 @@ function render(req, res, data, context, errorsHandler) {
             bemhtmlPath = bundle.getFile('bemhtml.js', data.lang),
             BEMTREE, BEMHTML;
 
-        if(APP_ENV == 'local' && query.rebuild) {
+        if(APP_ENV === 'local' && query.rebuild) {
             var exec = require('child_process').execSync;
             exec('./node_modules/.bin/enb make ' + bundle.bundle, { stdio : [0,1,2] });
         }
@@ -89,12 +93,12 @@ function render(req, res, data, context, errorsHandler) {
         });
     }
 
-    if(useCache && cached && (new Date() - cached.timestamp < cacheTTL)) {
+    if(cached && (new Date() - cached.timestamp < cacheTTL)) {
         return res.send(cached.html);
     }
 
     // в dev режиме перечитываем файл каждый раз
-    if(APP_ENV === 'local') {
+    if(APP_ENV === 'local' && process.env.FREEZE_MAP) {
         console.log('Try to read freeze map', freezeMapFile);
         try {
             let map = JSON.parse(fs.readFileSync(freezeMapFile, 'utf-8'));
@@ -124,7 +128,7 @@ function render(req, res, data, context, errorsHandler) {
         });
     }
 
-    if(DEBUG && query.bemjson) return res.send('<pre>' + JSON.stringify(bemjson, null, 4) + '</pre>');
+    if(DEBUG && query.bemjson) return res.send(`<pre>${JSON.stringify(bemjson, null, 4)}</pre>`);
 
     try {
         var html = BEMHTML.apply(bemjson);
@@ -137,17 +141,27 @@ function render(req, res, data, context, errorsHandler) {
         });
     }
 
-    useCache && (cache[cacheKey] = {
-        timestamp : new Date(),
-        html : html
-    });
+    if(USE_CACHE && cache.size < CACHE_SIZE) {
+        cache.set(cacheKey, {
+            timestamp : new Date(),
+            html : html
+        });
+    }
 
     recordRenderTime.call(res);
     res.send(html);
 }
 
+function clearOldCacheEntries() {
+    const now = new Date();
+    for(let entry of cache.entries()) {
+        if(now - entry[1].timestamp < cacheTTL) { continue; }
+        cache.delete(entry[0]);
+    }
+}
+
 function dropCache() {
-    cache = {};
+    return cache.clear();
 }
 
 function recordRenderTime() {
