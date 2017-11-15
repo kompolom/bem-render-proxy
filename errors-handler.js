@@ -87,10 +87,12 @@ function errorsHandler(req, res, opts) {
 
         // TODO: Отвязать версии сервера и фронта
         text : [
-            'server:' + env.BASE_DOMAIN,
+            'method: ' + req.method,
+            'domain: ' + req.headers['X-Forwarded-Host'],
+            'path: ' + opts.path,
+            'platform: ' + (opts.data? opts.data.platform : '---'),
             'server-build: ' + env.SERVER_BUILD_VERSION,
             'front-build: ' + env.FRONT_BUILD_VERSION,
-            'path: ' + opts.path,
             'error stack: ' + opts.error.stack
         ].join('\n')
     },
