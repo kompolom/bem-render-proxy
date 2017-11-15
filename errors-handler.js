@@ -87,33 +87,32 @@ function errorsHandler(req, res, opts) {
 
         // TODO: Отвязать версии сервера и фронта
         text : [
-            'server: ' + env.SERVER_BUILD_VERSION,
-            'front: ' + env.FRONT_BUILD_VERSION,
+            'server:' + env.BASE_DOMAIN,
+            'server-build: ' + env.SERVER_BUILD_VERSION,
+            'front-build: ' + env.FRONT_BUILD_VERSION,
             'path: ' + opts.path,
             'error stack: ' + opts.error.stack
         ].join('\n')
-    };
+    },
+    attachQueue = [];
+
+    if(opts.body) {
+        attachQueue.push({ filename : 'body.txt', content : opts.body });
+    }
 
     if(opts.data) {
         // Для безопасности
         delete opts.data.env;
+        attachQueue.push({ filename : 'data.json', content : JSON.stringify(opts.data, null, 4) })
+    }
 
-        let buf = new Buffer(JSON.stringify(opts.data, null, 4), 'utf8');
-
-        zlib.gzip(buf, (error, result) => {
-            if(error) {
-                console.log(error, error.stack);
-            }
-
-            mailOptions.attachments = [
-                {
-                    filename : 'data.json.gz',
-                    content : result
-                }
-            ];
-
-            sendMail(mailOptions);
-        });
+    if(attachQueue.length){
+        processAttachments(attachQueue)
+            .then(attachments => {
+                mailOptions.attachments = attachments;
+                sendMail(mailOptions);
+            })
+            .catch(err => console.log(err, err.stack))
     } else {
         sendMail(mailOptions);
     }
@@ -129,6 +128,25 @@ function sendMail(opts) {
             return console.log(error);
         }
         console.log('Message %s sent: %s', info.messageId, info.response);
+    });
+}
+
+function processAttachments(attachmentsList) {
+    return Promise.all(attachmentsList.map(processAttachment));
+}
+
+function processAttachment(attachment) {
+    return new Promise((resolve, reject) => {
+        let buf = new Buffer(attachment.content, 'utf8');
+
+        zlib.gzip(buf, (error, result) => {
+            if(error) { reject(error); }
+
+            resolve({
+                filename : `${attachment.filename}.gz`,
+                content : result
+            });
+        });
     });
 }
 

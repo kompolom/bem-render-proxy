@@ -115,6 +115,7 @@ app.all('*', function(req, res) {
                 return errorsHandler(req, res, {
                     code : 502,
                     type : 'SERVER JSON error',
+                    body : body,
                     error : err
                 });
             }
