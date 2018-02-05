@@ -22,6 +22,7 @@ const express = require('express'),
     APP_ENV = env.APP_ENV,
     renderContentType = 'application/bem+json',
     render = Render.render,
+    bypassHeaders = require('./bypassHeaders'),
     errorsHandler = require('./errors-handler');
 
 // ensure log directory exists
@@ -89,13 +90,13 @@ app.all('*', function(req, res) {
         backendMessage.on('data', function (chunk) { body += chunk; });
         backendMessage.on('end', function () {
             res.status(backendMessage.statusCode);
+            bypassHeaders(backendMessage, res);
+
             if(this.headers[SET_COOKIE_HEADER]) {
-                res.setHeader(SET_COOKIE_HEADER, backendMessage.headers[SET_COOKIE_HEADER]);
 
                 // Актуализация req.cookies
                 setCookieParser(backendMessage).forEach((cookie) => {
-                    const
-                        expires = new Date(cookie.expires),
+                    const expires = new Date(cookie.expires),
                         now = new Date();
 
                     if(expires < now) {
