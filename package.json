@@ -22,7 +22,7 @@
     "express": "^4.13.3",
     "file-stream-rotator": "0.0.7",
     "morgan": "^1.6.1",
-    "nodemailer": "^4.0.1",
+    "node-telegram-bot-api": "^0.30.0",
     "request": "^2.81.0",
     "set-cookie-parser": "^2.0.0"
   },
