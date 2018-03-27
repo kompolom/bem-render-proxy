@@ -129,5 +129,9 @@ PAGE_FORMAT='page_{scope}_{view}'
  - `{view}` имя страницы. По умолчанию index
 
 
-## Отправка ошибок по email
-Смотри пример настроек в .env.example (LOGMAIL)
+## Отправка ошибок в Telegram чат
+
+```
+TELEGRAM_BOT_TOKEN=токен_бота
+TELEGRAM_CHAT_ID=id_чата_куда_отправить
+```
