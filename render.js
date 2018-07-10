@@ -18,17 +18,12 @@ const path = require('path'),
     BundleScheme = require('./bundle-scheme'),
     bundle = new BundleScheme(BUNDLE_FORMAT, PAGE_FORMAT, STATIC_ROOT);
 
-var cache = new Map(),
+let cache = new Map(),
+    map,
     freezeMap = new FreezeMap();
 
 setInterval(clearOldCacheEntries, cacheTTL);
 
-try {
-    let map = require.main.require(freezeMapFile);
-    freezeMap = new FreezeMap(map, NORMALIZE_FREEZE_URLS);
-} catch (e) {
-    console.log('Unable to load freeze map', '\n', e.message);
-}
 
 console.log('Run in', APP_ENV.toUpperCase(), 'mode');
 console.log('USE_CACHE:', USE_CACHE);
@@ -37,6 +32,16 @@ console.log('USE_CACHE:', USE_CACHE);
 function render(req, res, data, context, errorsHandler) {
     if(DEBUG && res.statusCode === 500 && APP_ENV === 'local') // FIXME remove this
         return res.send(`<pre>${JSON.stringify(data, null, 4)}</pre>`);
+
+    if(process.env.FREEZE_MAP && (!map || APP_ENV === 'local')) {
+        console.log('Try to read freeze map', freezeMapFile);
+        try {
+            map = JSON.parse(fs.readFileSync(freezeMapFile, 'utf-8'));
+            freezeMap = new FreezeMap(map, NORMALIZE_FREEZE_URLS);
+        } catch (e) {
+            console.log('Unable to load', freezeMapFile, '\n', e.message);
+        }
+    }
 
     var query = req.query,
         cookies = req.cookies,
@@ -58,6 +63,7 @@ function render(req, res, data, context, errorsHandler) {
         data.env = process.env;
         data.query = query;
         data.cookies = cookies;
+        data.freezeMap = map || {};
 
     recordRenderTime.call(req);
 
@@ -95,17 +101,6 @@ function render(req, res, data, context, errorsHandler) {
 
     if(cached && (new Date() - cached.timestamp < cacheTTL)) {
         return res.send(cached.html);
-    }
-
-    // в dev режиме перечитываем файл каждый раз
-    if(APP_ENV === 'local' && process.env.FREEZE_MAP) {
-        console.log('Try to read freeze map', freezeMapFile);
-        try {
-            let map = JSON.parse(fs.readFileSync(freezeMapFile, 'utf-8'));
-            freezeMap = new FreezeMap(map, NORMALIZE_FREEZE_URLS);
-        } catch (e) {
-            console.log('Unable to load', freezeMapFile, '\n', e.message);
-        }
     }
 
     var bemtreeCtx = {
