@@ -15,4 +15,8 @@ const envOpts = OPT_NAMES.reduce(function(opts, optName) {
     return opts;
 }, {});
 
-module.exports = Object.assign({}, defaults, envOpts);
+const resolvedOpts = Object.assign({}, defaults, envOpts);
+
+module.exports = Object.assign({
+    USE_TELEGRAM_BOT: resolvedOpts.APP_ENV !== 'local'
+}, resolvedOpts);

@@ -1,14 +1,8 @@
 const
     env = process.env,
+    config = require('./cfg');
 
-    zlib = require('zlib'),
-    TelegramBot = require('node-telegram-bot-api'),
-
-    token = env.TELEGRAM_BOT_TOKEN,
-    chatId = env.TELEGRAM_CHAT_ID,
-
-    bot = new TelegramBot(token, { polling : false });
-
+let sendMessage = function() {};
 
 function errorsHandler(req, res, opts) {
     console.log(opts.error, opts.error.stack);
@@ -26,48 +20,57 @@ function errorsHandler(req, res, opts) {
     sendMessage(req, res, opts);
 }
 
-/**
- * SendMessage to external source
- *
- * @param {Request} req
- * @param {Response} res
- * @param {Object} opts
- * @param {Number} opts.code
- * @param {String} opts.type
- * @param {String} opts.path
- * @param {Error} opts.error
- * @param {Object} [opts.data]
- */
-function sendMessage(req, res, opts) {
-    if(!bot) return;
+if(config.USE_TELEGRAM_BOT) {
+    const zlib = require('zlib'),
+        TelegramBot = require('node-telegram-bot-api'),
+        token = env.TELEGRAM_BOT_TOKEN,
+        chatId = env.TELEGRAM_CHAT_ID,
+        bot = new TelegramBot(token, { polling : false });
 
-    const text = [
-        `${opts.code} | ${opts.type} - ${opts.error.message}`,
-        '',
-        `${req.headers['X-Forwarded-Host']} ${(opts.data? opts.data.platform : '---')}`,
-        `${req.method} ${opts.path}`,
-    ].join('\n');
+        /**
+         * SendMessage to external source
+         *
+         * @param {Request} req
+         * @param {Response} res
+         * @param {Object} opts
+         * @param {Number} opts.code
+         * @param {String} opts.type
+         * @param {String} opts.path
+         * @param {Error} opts.error
+         * @param {Object} [opts.data]
+         */
+        sendMessage = function(req, res, opts) {
+            if(!bot) return;
 
-    if(opts.data) {
-        // Для безопасности
-        try {
-            delete opts.data.env;
-        } catch(e) {}
+            const text = [
+                `${opts.code} | ${opts.type} - ${opts.error.message}`,
+                '',
+                `${req.headers['X-Forwarded-Host']} ${(opts.data? opts.data.platform : '---')}`,
+                `${req.method} ${opts.path}`,
+            ].join('\n');
 
-        let buf = new Buffer(JSON.stringify(opts.data, null, 2), 'utf8');
+            if(opts.data) {
+                // Для безопасности
+                try {
+                    delete opts.data.env;
+                } catch(e) {}
 
-        zlib.gzip(buf, (error, result) => {
-            if(error) { reject(error); }
+                let buf = new Buffer(JSON.stringify(opts.data, null, 2), 'utf8');
 
-            bot.sendDocument(chatId, result, {
-                caption : text,
-            }, {
-                filename : 'data.json'
-            });
-        });
-    } else {
-        bot.sendMessage(chatId, text);
-    }
+                zlib.gzip(buf, (error, result) => {
+                    if(error) { reject(error); }
+
+                    bot.sendDocument(chatId, result, {
+                        caption : text,
+                    }, {
+                        filename : 'data.json'
+                    });
+                });
+            } else {
+                bot.sendMessage(chatId, text);
+            }
+        }
 }
+
 
 module.exports = errorsHandler;
