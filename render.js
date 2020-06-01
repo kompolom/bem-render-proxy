@@ -85,13 +85,12 @@ function render(req, res, data, context, errorsHandler) {
         }
 
         if(APP_ENV === 'local') {
-            console.log('Drop templates cache');
             delete require.cache[require.resolve(bemtreePath)];
             delete require.cache[require.resolve(bemhtmlPath)];
         }
 
-        BEMTREE = require(bemtreePath).BEMTREE,
         BEMHTML = require(bemhtmlPath).BEMHTML;
+        BEMTREE = require(bemtreePath).BEMTREE;
     } catch (err) {
         return errorsHandler(req, res, {
             code : 424,
@@ -113,7 +112,7 @@ function render(req, res, data, context, errorsHandler) {
 
     try {
         BEMTREE.BEMContext.prototype.getFreezed = url => freezeMap.linkTo(url);
-        BEMTREE.BEMContext.prototype.useMerges = APP_ENV === 'production';
+        BEMTREE.BEMContext.prototype.useMerges = config.USE_MERGES;
         var bemjson = BEMTREE.apply(bemtreeCtx);
     } catch(err) {
         return errorsHandler(req, res, {

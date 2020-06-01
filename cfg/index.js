@@ -18,5 +18,6 @@ const envOpts = OPT_NAMES.reduce(function(opts, optName) {
 const resolvedOpts = Object.assign({}, defaults, envOpts);
 
 module.exports = Object.assign({
-    USE_TELEGRAM_BOT: resolvedOpts.APP_ENV !== 'local'
+    USE_TELEGRAM_BOT: resolvedOpts.APP_ENV !== 'local',
+    USE_MERGES: resolvedOpts.APP_ENV === 'production' || resolvedOpts.APP_ENV === 'stage'
 }, resolvedOpts);
