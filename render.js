@@ -22,7 +22,7 @@ let cache = new Map(),
     map,
     freezeMap = new FreezeMap();
 
-setInterval(clearOldCacheEntries, cacheTTL);
+USE_CACHE && setInterval(clearOldCacheEntries, cacheTTL);
 
 
 console.log('Run in', APP_ENV.toUpperCase(), 'mode');
