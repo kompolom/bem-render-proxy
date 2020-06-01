@@ -123,7 +123,10 @@ function render(req, res, data, context, errorsHandler) {
         });
     }
 
-    if(DEBUG && query.bemjson) return res.send(`<pre>${JSON.stringify(bemjson, null, 4)}</pre>`);
+    if(DEBUG && query.bemjson) {
+        const partialBemjson = require('./json-cut')(data, bemjson);
+        return res.send(`<pre>${JSON.stringify(partialBemjson, null, 4)}</pre>`);
+    }
 
     try {
         var html = BEMHTML.apply(bemjson);
