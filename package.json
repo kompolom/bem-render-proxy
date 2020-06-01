@@ -11,7 +11,7 @@
   },
   "scripts": {
     "start": "node index.js",
-    "test": "mocha"
+    "test": "jest"
   },
   "keywords": [
     "bem"
@@ -27,8 +27,7 @@
     "set-cookie-parser": "^2.0.0"
   },
   "devDependencies": {
-    "mocha": "^3.2.0",
-    "should": "^11.2.1"
+    "jest": "^26.0.1"
   },
   "license": "ISC"
 }
