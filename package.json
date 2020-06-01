@@ -24,7 +24,8 @@
     "morgan": "^1.6.1",
     "node-telegram-bot-api": "^0.30.0",
     "request": "^2.81.0",
-    "set-cookie-parser": "^2.0.0"
+    "set-cookie-parser": "^2.0.0",
+    "yn": "^4.0.0"
   },
   "devDependencies": {
     "jest": "^26.0.1"

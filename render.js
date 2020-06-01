@@ -1,20 +1,20 @@
 'use strict';
 
 const path = require('path'),
+    config = require('./cfg'),
     fs = require('fs'),
-    isDev = process.env.NODE_ENV === 'development',
-    cacheTTL = process.env.CACHE_TTL,
-    CACHE_SIZE = process.env.CACHE_SIZE || 1000,
-    USE_CACHE = !!process.env.USE_CACHE,
-    APP_ENV = process.env.APP_ENV,
-    DEBUG = process.env.APP_DEBUG,
-    DEFAULT_LANG = process.env.DEFAULT_LANG,
-    STATIC_ROOT = process.env.STATIC_ROOT || '/',
-    NORMALIZE_FREEZE_URLS = process.env.NORMALIZE_FREEZE_URLS,
+    cacheTTL = config.CACHE_TTL,
+    CACHE_SIZE = config.CACHE_SIZE,
+    USE_CACHE = config.USE_CACHE,
+    APP_ENV = config.APP_ENV,
+    DEBUG = config.APP_DEBUG,
+    DEFAULT_LANG = config.DEFAULT_LANG,
+    STATIC_ROOT = config.STATIC_ROOT,
+    NORMALIZE_FREEZE_URLS = config.NORMALIZE_FREEZE_URLS,
     FreezeMap = require('./freeze-map'),
-    freezeMapFile = path.resolve(process.env.FREEZE_MAP || ''),
-    BUNDLE_FORMAT = process.env.BUNDLE_FORMAT || '{platform}.pages',
-    PAGE_FORMAT = process.env.PAGE_FORMAT || 'page_{scope}_{view}',
+    freezeMapFile = path.resolve(config.FREEZE_MAP),
+    BUNDLE_FORMAT = config.BUNDLE_FORMAT,
+    PAGE_FORMAT = config.PAGE_FORMAT,
     BundleScheme = require('./bundle-scheme'),
     bundle = new BundleScheme(BUNDLE_FORMAT, PAGE_FORMAT, STATIC_ROOT);
 
@@ -27,13 +27,14 @@ setInterval(clearOldCacheEntries, cacheTTL);
 
 console.log('Run in', APP_ENV.toUpperCase(), 'mode');
 console.log('USE_CACHE:', USE_CACHE);
+console.log('DEBUG:', DEBUG);
 
 
 function render(req, res, data, context, errorsHandler) {
-    if(DEBUG && res.statusCode === 500 && APP_ENV === 'local') // FIXME remove this
+    if(DEBUG && res.statusCode === 500 && APP_ENV === 'local')
         return res.send(`<pre>${JSON.stringify(data, null, 4)}</pre>`);
 
-    if(process.env.FREEZE_MAP && (!map || APP_ENV === 'local')) {
+    if(config.FREEZE_MAP && (!map || APP_ENV === 'local')) {
         console.log('Try to read freeze map', freezeMapFile);
         try {
             map = JSON.parse(fs.readFileSync(freezeMapFile, 'utf-8'));
