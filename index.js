@@ -3,20 +3,17 @@
 const express = require('express'),
     config = require('./cfg'),
     fs = require('fs'),
-    path = require('path'),
     app = express(),
     bodyParser = require('body-parser'),
     cookieParser = require('cookie-parser'),
     setCookieParser = require('set-cookie-parser'),
-    env = process.env,
     port = config.APP_PORT,
     backendHost = config.BACKEND_HOST,
     backendPort = config.BACKEND_PORT,
     isSocket = isNaN(port),
     http = require('http'),
-    FileStreamRotator = require('file-stream-rotator'),
+    RFS = require('rotating-file-stream'),
     morgan = require('morgan'),
-    logDir = config.LOGS_DIR || path.resolve(process.cwd(), 'logs'),
     Render = require('./render.js'),
     applyPatches = require('./apply-patches'),
     DEBUG = config.APP_DEBUG,
@@ -25,17 +22,6 @@ const express = require('express'),
     render = Render.render,
     bypassHeaders = require('./bypassHeaders'),
     errorsHandler = require('./errors-handler');
-
-// ensure log directory exists
-fs.existsSync(logDir) || fs.mkdirSync(logDir);
-
-// create a rotating write stream
-var accessLogStream = FileStreamRotator.getStream({
-  date_format : 'YYYYMMDD',
-  filename : logDir + '/access-%DATE%.log',
-  frequency : 'daily',
-  verbose : false
-});
 
 morgan.token('render-time', function(req, res, digits){
     if(!req._renderAt || !res._renderAt){
@@ -54,11 +40,20 @@ morgan.token('render-time', function(req, res, digits){
 app
     .disable('x-powered-by')
     .disable('E-tag')
-    .use(morgan(':method :url :status - :response-time ms (render :render-time ms)', { stream : accessLogStream }))
     .use(cookieParser())
     .use(bodyParser.json());
 
-if(DEBUG){
+if(config.FILE_LOGS_ENABLED) {
+    // create a rotating write stream
+    const accessLogStream = RFS.createStream('access.log', {
+        teeToStdout: DEBUG,
+        path: config.LOGS_DIR,
+        size: '10M',
+        interval: '1d',
+        compress: 'gzip'
+    });
+    app.use(morgan(':method :url :status - :response-time ms (render :render-time ms)', { stream : accessLogStream }))
+} else {
     app.use(morgan(':method :url :status - :response-time ms (render :render-time ms)'));
 }
 

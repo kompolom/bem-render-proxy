@@ -1,4 +1,6 @@
 // File contains default options
+const path = require('path');
+
 module.exports = {
     APP_ENV: 'production',
     APP_PORT: 3030,
@@ -13,5 +15,7 @@ module.exports = {
     PAGE_FORMAT: 'page_{scope}_{view}',
     DEFAULT_LANG: 'ru',
     BACKEND_HOST: 'localhost',
-    BACKEND_PORT: 8080
+    BACKEND_PORT: 8080,
+    FILE_LOGS_ENABLED: false,
+    LOGS_DIR: path.resolve(process.cwd(), 'logs')
 };
