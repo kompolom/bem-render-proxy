@@ -2,12 +2,16 @@
 const defaults = require('./default.conf'),
     yn = require('yn'),
     env = process.env,
-    OPT_NAMES = Object.keys(defaults);
+    BOOL_OPTS = [
+        'USE_TELEGRAM_BOT',
+        'USE_MERGES'
+    ]
+    OPT_NAMES = Object.keys(defaults).concat(BOOL_OPTS);
 
 const envOpts = OPT_NAMES.reduce(function(opts, optName) {
 
     if(env[optName]) {
-        const isBoolOpt = typeof defaults[optName] === 'boolean',
+        const isBoolOpt = typeof defaults[optName] === 'boolean' || BOOL_OPTS.includes(optName),
             envVal = env[optName];
         opts[optName] = isBoolOpt? yn(envVal) : envVal;
     }

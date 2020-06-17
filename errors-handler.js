@@ -1,12 +1,15 @@
 const
     env = process.env,
-    config = require('./cfg');
+    config = require('./cfg'),
+    channels = [];
 
-let sendMessage = function() {};
+const stderrChannel = (req, res, opts) => {
+    console.error(JSON.stringify(opts, 2));
+};
+
+channels.push(stderrChannel)
 
 function errorsHandler(req, res, opts) {
-    console.log(opts.error, opts.error.stack);
-
     opts = Object.assign({
         code : 500,
         type : 'Error',
@@ -17,7 +20,7 @@ function errorsHandler(req, res, opts) {
         .status(opts.code || 500)
         .end(opts.type + ' ' + opts.error.message);
 
-    sendMessage(req, res, opts);
+    channels.forEach(channel => channel(req, res, opts))
 }
 
 if(config.USE_TELEGRAM_BOT) {
@@ -39,7 +42,7 @@ if(config.USE_TELEGRAM_BOT) {
          * @param {Error} opts.error
          * @param {Object} [opts.data]
          */
-        sendMessage = function(req, res, opts) {
+        channels.push(function(req, res, opts) {
             if(!bot) return;
 
             const text = [
@@ -69,7 +72,7 @@ if(config.USE_TELEGRAM_BOT) {
             } else {
                 bot.sendMessage(chatId, text);
             }
-        }
+        })
 }
 
 
