@@ -14,14 +14,14 @@ const express = require('express'),
     http = require('http'),
     RFS = require('rotating-file-stream'),
     morgan = require('morgan'),
-    Render = require('./render.js'),
-    applyPatches = require('./apply-patches'),
+    Render = require('./renderers/render.js'),
+    applyPatches = require('./utils/apply-patches'),
     DEBUG = config.APP_DEBUG,
     APP_ENV = config.APP_ENV,
     renderContentType = 'application/bem+json',
     render = Render.render,
-    bypassHeaders = require('./bypassHeaders'),
-    errorsHandler = require('./errors-handler');
+    bypassHeaders = require('./utils/bypassHeaders'),
+    errorsHandler = require('./utils/errors-handler');
 
 morgan.token('render-time', function(req, res, digits){
     if(!req._renderAt || !res._renderAt){

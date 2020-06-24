@@ -1,4 +1,4 @@
-const applyPatches = require('../apply-patches'),
+const applyPatches = require('../src/utils/apply-patches'),
     path = require('path'),
     patchRoot = path.resolve(__dirname, 'patch');
 

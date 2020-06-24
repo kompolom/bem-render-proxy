@@ -1,6 +1,6 @@
 const
     env = process.env,
-    config = require('./cfg'),
+    config = require('../cfg'),
     channels = [];
 
 const stderrChannel = (req, res, opts) => {

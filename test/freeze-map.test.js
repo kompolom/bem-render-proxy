@@ -1,4 +1,4 @@
-const FreezeMapper = require('../freeze-map'),
+const FreezeMapper = require('../src/utils/freeze-map'),
     WIN_MAP = {
         "bundles\\admin\\admin.css": "static\\KgEh9r54CSl.css",
         "bundles\\admin\\admin.js": "static\\dfuVYKVTKZF.js",

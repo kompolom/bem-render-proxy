@@ -1,4 +1,4 @@
-const bypassHeaders = require('../bypassHeaders'),
+const bypassHeaders = require('../src/utils/bypassHeaders'),
     http = require('http');
 
 describe('bypassHeaders', () => {

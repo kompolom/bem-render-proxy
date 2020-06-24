@@ -1,5 +1,5 @@
 const path = require('path'),
-    BundleScheme = require('../bundle-scheme');
+    BundleScheme = require('../src/utils/bundle-scheme');
 
 describe('bundle-scheme', function() {
     var bundleScheme;

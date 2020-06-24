@@ -1,7 +1,7 @@
 process.env.APP_ENV = 'stage';
 process.env.APP_DEBUG = 'yes';
 
-const config = require('../cfg');
+const config = require('../src/cfg');
 
 describe('config', () => {
     it('Should return value from env', () => {

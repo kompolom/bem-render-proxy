@@ -1,4 +1,4 @@
-const jsonCut = require('../json-cut');
+const jsonCut = require('../src/utils/json-cut');
 
 describe('json-cut', () => {
     let DATA

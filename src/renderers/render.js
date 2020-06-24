@@ -1,7 +1,7 @@
 'use strict';
 
 const path = require('path'),
-    config = require('./cfg'),
+    config = require('../cfg'),
     fs = require('fs'),
     cacheTTL = config.CACHE_TTL,
     CACHE_SIZE = config.CACHE_SIZE,
@@ -11,11 +11,11 @@ const path = require('path'),
     DEFAULT_LANG = config.DEFAULT_LANG,
     STATIC_ROOT = config.STATIC_ROOT,
     NORMALIZE_FREEZE_URLS = config.NORMALIZE_FREEZE_URLS,
-    FreezeMap = require('./freeze-map'),
+    FreezeMap = require('../utils/freeze-map'),
     freezeMapFile = path.resolve(config.FREEZE_MAP),
     BUNDLE_FORMAT = config.BUNDLE_FORMAT,
     PAGE_FORMAT = config.PAGE_FORMAT,
-    BundleScheme = require('./bundle-scheme'),
+    BundleScheme = require('../utils/bundle-scheme'),
     bundle = new BundleScheme(BUNDLE_FORMAT, PAGE_FORMAT, STATIC_ROOT);
 
 let cache = new Map(),
@@ -69,7 +69,7 @@ function render(req, res, data, context, errorsHandler) {
     recordRenderTime.call(req);
 
     if(DEBUG && query.json) {
-        let json = require('./json-cut')(data, query.json);
+        let json = require('../utils/json-cut')(data, query.json);
 
         return res.send(`<pre>${JSON.stringify(json, null, 4)}</pre>`);
     }
@@ -124,7 +124,7 @@ function render(req, res, data, context, errorsHandler) {
     }
 
     if(DEBUG && query.bemjson) {
-        const partialBemjson = require('./json-cut')(data, bemjson);
+        const partialBemjson = require('../utils/json-cut')(data, bemjson);
         return res.send(`<pre>${JSON.stringify(partialBemjson, null, 4)}</pre>`);
     }
 
