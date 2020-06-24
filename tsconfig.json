@@ -5,9 +5,9 @@
     "outDir": "dist",
     "allowJs": true,
     "pretty": true,
+    "rootDir": "src",
     "esModuleInterop": true
   },
   "compileOnSave": true,
-  "include": ["src", "test"],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules", "test", "dist"]
 }
