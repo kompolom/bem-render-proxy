@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "ES2020",
+    "outDir": "dist",
+    "allowJs": true,
+    "pretty": true,
+    "rootDir": "src",
+    "esModuleInterop": true
+  },
+  "compileOnSave": true,
+  "exclude": ["node_modules", "test", "dist"]
+}

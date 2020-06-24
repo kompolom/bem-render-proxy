@@ -3,15 +3,16 @@
   "name": "bem-render-proxy",
   "version": "0.11.0",
   "description": "Render proxy for bem projects. Render data with BEMHTML and BEMTREE",
-  "main": "index.js",
+  "main": "src/index.ts",
   "repository": "https://github.com/kompolom/bem-render-proxy",
   "homepage": "https://github.com/kompolom/bem-render-proxy",
   "engines": {
     "node": ">=6.9"
   },
   "scripts": {
-    "start": "node index.js",
-    "test": "jest"
+    "start": "node dist/index.js",
+    "test": "jest",
+    "build": "tsc"
   },
   "keywords": [
     "bem"
@@ -28,7 +29,48 @@
     "yn": "4.0.0"
   },
   "devDependencies": {
-    "jest": "^26.0.1"
+    "@types/express": "^4.17.6",
+    "@types/jest": "^26.0.1",
+    "@types/node": "^14.0.14",
+    "@typescript-eslint/eslint-plugin": "^3.4.0",
+    "@typescript-eslint/parser": "^3.4.0",
+    "eslint": "^7.3.1",
+    "eslint-config-prettier": "^6.11.0",
+    "eslint-plugin-prettier": "^3.1.4",
+    "jest": "^26.0.1",
+    "prettier": "^2.0.5",
+    "ts-jest": "^26.1.1",
+    "typescript": "^3.9.5"
+  },
+  "jest": {
+    "transform": {
+      "^.+\\.(t|j)s$": "ts-jest"
+    },
+    "testRegex": "(/test/.*\\.test)\\.(js|ts)$",
+    "moduleFileExtensions": [
+      "ts",
+      "js",
+      "json",
+      "node"
+    ]
+  },
+  "eslintConfig": {
+    "parser": "@typescript-eslint/parser",
+    "parserOptions": {
+      "ecmaVersion": 2020,
+      "sourceType": "module"
+    },
+    "extends": [
+      "plugin:@typescript-eslint/recommended",
+      "prettier/@typescript-eslint",
+      "plugin:prettier/recommended"
+    ],
+    "rules": {
+      "@typescript-eslint/ban-ts-comment": "off"
+    },
+    "ignorePatterns": [
+      "dist"
+    ]
   },
   "license": "ISC"
 }
