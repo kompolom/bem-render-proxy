@@ -1,3 +1,6 @@
-src
 logs
+src
 test
+.idea
+tsconfig.json
+.travis.yml

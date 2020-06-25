@@ -3,7 +3,7 @@
   "name": "bem-render-proxy",
   "version": "0.12.0",
   "description": "Render proxy for bem projects. Render data with BEMHTML and BEMTREE",
-  "main": "src/index.ts",
+  "main": "dist/index.js",
   "repository": "https://github.com/kompolom/bem-render-proxy",
   "homepage": "https://github.com/kompolom/bem-render-proxy",
   "engines": {
