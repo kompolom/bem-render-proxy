@@ -47,6 +47,10 @@
     "transform": {
       "^.+\\.(t|j)s$": "ts-jest"
     },
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "dist"
+    ],
     "testRegex": "(/test/.*\\.test)\\.(js|ts)$",
     "moduleFileExtensions": [
       "ts",
