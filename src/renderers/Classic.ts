@@ -98,7 +98,6 @@ export class ClassicRenderer extends Renderer {
 
       let BEMTREE: iBEMTREE,
         BEMHTML: iBEMHTML,
-        // eslint-disable-next-line @typescript-eslint/ban-types
         bemjson: Record<string, unknown> | undefined,
         html: string | undefined;
 

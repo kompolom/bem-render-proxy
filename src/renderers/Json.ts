@@ -18,16 +18,15 @@ export class JsonRenderer extends Renderer {
     return new Promise((resolve, reject) => {
       this.fixStart(req);
       try {
-        const jsonString = JSON.stringify(data);
         if (this.settings.wrap) {
-          res.send(`<pre>${jsonString}</pre>`);
+          res.send(`<pre>${JSON.stringify(data, null, 2)}</pre>`);
         } else {
-          res.json(jsonString);
+          res.json(data);
         }
         this.fixEnd(res);
         resolve();
-      } catch (e) {
-        reject(e);
+      } catch (error) {
+        reject({ error });
       }
     });
   }
