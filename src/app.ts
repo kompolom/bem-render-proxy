@@ -6,10 +6,24 @@ import cookieParser from "cookie-parser";
 import setCookieParser from "set-cookie-parser";
 import RFS from "rotating-file-stream";
 import morgan from "morgan";
-import { render } from "./renderers/render";
 import { applyPatches } from "./utils/apply-patches";
 import { bypassHeaders } from "./utils/bypassHeaders";
 import errorsHandler from "./utils/errors-handler";
+import { ClassicRenderer } from "./renderers/Classic";
+import { calcRenderTime } from "./utils/render-time";
+
+const renderer = new ClassicRenderer({
+  debug: config.APP_DEBUG,
+  appEnv: config.APP_ENV,
+  freezeMap: config.FREEZE_MAP,
+  useMerges: config.USE_MERGES,
+  useCache: config.USE_CACHE,
+  cacheTTL: config.CACHE_TTL,
+  cacheSize: config.CACHE_SIZE,
+  bundleFormat: config.BUNDLE_FORMAT,
+  pageFormat: config.PAGE_FORMAT,
+  staticRoot: config.STATIC_ROOT,
+});
 
 const app = express(),
   backendHost = config.BACKEND_HOST,
@@ -18,20 +32,7 @@ const app = express(),
   APP_ENV = config.APP_ENV,
   renderContentType = "application/bem+json";
 
-morgan.token("render-time", function (req, res, digits) {
-  if (!req._renderAt || !res._renderAt) {
-    // missing request and/or response start time
-    return;
-  }
-
-  // calculate diff
-  const ms =
-    (res._renderAt[0] - req._renderAt[0]) * 1e3 +
-    (res._renderAt[1] - req._renderAt[1]) * 1e-6;
-
-  // return truncated value
-  return ms.toFixed(digits === undefined ? 3 : digits);
-});
+morgan.token("render-time", calcRenderTime);
 
 app
   .disable("x-powered-by")
@@ -131,16 +132,9 @@ app.all("*", function (req, res) {
           applyPatches(req, res, data);
         }
 
-        try {
-          render(req, res, data, null, errorsHandler);
-        } catch (e) {
-          return errorsHandler(req, res, {
-            code: 500,
-            type: "RENDER error",
-            error: e,
-            data: data,
-          });
-        }
+        renderer.render(req, res, data).catch((errData) => {
+          errorsHandler(req, res, errData);
+        });
       });
     });
 

@@ -27,7 +27,7 @@ describe("ClassicRenderer", () => {
 
     loadTemplateSpy = jest
       .spyOn(renderer, "loadTemplate")
-      .mockImplementation((ext: string) => {
+      .mockImplementation(() => {
         return {
           BEMTREE: {
             apply: jest.fn(),
@@ -54,10 +54,14 @@ describe("ClassicRenderer", () => {
     );
   });
 
-  it("should resolve render time", async () => {
-    const result = await renderer.render(mockReq, mockRes, renderData);
-    expect(result).toHaveLength(2);
-    result.forEach((val) => expect(val).toEqual(expect.any(Number)));
+  it("should fix render time", async () => {
+    const startSpy = jest.spyOn(renderer, "fixStart");
+    const endSpy = jest.spyOn(renderer, "fixEnd");
+    await renderer.render(mockReq, mockRes, renderData);
+    expect(startSpy).toBeCalledTimes(1);
+    expect(endSpy).toBeCalledTimes(1);
+    startSpy.mockRestore();
+    endSpy.mockRestore();
   });
 });
 
@@ -79,14 +83,18 @@ describe("JsonRenderer", () => {
     expect(renderer.render(mockReq, mockRes, {})).toBeInstanceOf(Promise);
   });
 
-  it("should resolve render time", async () => {
-    const result = await renderer.render(mockReq, mockRes, {});
-    expect(result).toHaveLength(2);
-    result.forEach((val) => expect(val).toEqual(expect.any(Number)));
-  });
-
   it("should pass string to res", async () => {
     await renderer.render(mockReq, mockRes, { a: 1 });
     expect(mockRes.json).toBeCalledWith('{"a":1}');
+  });
+
+  it("should fix render time", async () => {
+    const startSpy = jest.spyOn(renderer, "fixStart");
+    const endSpy = jest.spyOn(renderer, "fixEnd");
+    await renderer.render(mockReq, mockRes, {});
+    expect(startSpy).toBeCalledTimes(1);
+    expect(endSpy).toBeCalledTimes(1);
+    startSpy.mockRestore();
+    endSpy.mockRestore();
   });
 });

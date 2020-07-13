@@ -1,7 +1,6 @@
 import { Request, Response } from "express";
 import { IBackendData } from "../types/IBackendData";
-import { hrtime } from "../types/hrtime";
-import exp from "constants";
+import { fixTime } from "../utils/render-time";
 
 export interface IRendererSettings {
   debug?: boolean;
@@ -21,8 +20,18 @@ export abstract class Renderer {
     req: Request,
     res: Response,
     data: IBackendData
-  ): Promise<hrtime>;
-  protected getTime(): hrtime {
-    return process.hrtime();
+  ): Promise<void>;
+
+  protected fixStart(req: Request): void {
+    fixTime(req);
+  }
+
+  protected fixEnd(res: Response): void {
+    fixTime(res);
+  }
+
+  protected getEnv(): Record<string, string> {
+    // FIXME: filter variables
+    return process.env;
   }
 }
