@@ -72,6 +72,7 @@ describe("JsonRenderer", () => {
     mockReq = {} as Request;
     mockRes = ({
       json: jest.fn(),
+      send: jest.fn(),
     } as unknown) as Response;
   });
 
@@ -83,9 +84,17 @@ describe("JsonRenderer", () => {
     expect(renderer.render(mockReq, mockRes, {})).toBeInstanceOf(Promise);
   });
 
-  it("should pass string to res", async () => {
+  it("should call res.json", async () => {
     await renderer.render(mockReq, mockRes, { a: 1 });
-    expect(mockRes.json).toBeCalledWith('{"a":1}');
+    expect(mockRes.json).toBeCalledWith({ a: 1 });
+  });
+
+  it("should wrap json with pre tag", async () => {
+    const renderer = new JsonRenderer({ wrap: true });
+    await renderer.render(mockReq, mockRes, ({
+      a: 1,
+    } as unknown) as IBackendData);
+    expect(mockRes.send).toBeCalledWith('<pre>{\n  "a": 1\n}</pre>');
   });
 
   it("should fix render time", async () => {
