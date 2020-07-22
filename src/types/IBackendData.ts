@@ -1,4 +1,4 @@
-import { IDictionary } from "./IDictionary";
+import { ParamsDictionary } from "express-serve-static-core";
 
 export interface IBackendData {
   title: string;
@@ -9,9 +9,9 @@ export interface IBackendData {
   description: string;
   data: unknown;
   bundleUrl?: string;
-  env?: IDictionary<string>;
-  cookies?: IDictionary<string>;
-  freezeMap?: IDictionary<string>;
-  query?: IDictionary<unknown>;
+  env?: ParamsDictionary;
+  cookies?: ParamsDictionary;
+  freezeMap?: ParamsDictionary;
+  query?: ParamsDictionary;
   [key: string]: string | unknown;
 }

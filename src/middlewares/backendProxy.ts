@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from "express";
+import { Request, Response, NextFunction, RequestHandler } from "express";
 import { IncomingMessage, request, RequestOptions } from "http";
 import { bypassHeaders } from "../utils/bypassHeaders";
 import errorsHandler from "../utils/errors-handler";
@@ -13,14 +13,13 @@ export const RENDER_CONTENT_TYPE = "application/bem+json";
 export const RENDER_HEADER = "x-render";
 
 const CONTENT_TYPE_HEADER = "content-type";
-const SET_COOKIE_HEADER = "set-cookie";
 const FORWARDED_HOST_HEADER = "X-Forwarded-Host";
 
-export const backendProxy = (conf: BackendProxyOptions) => (
+export const backendProxy = (conf: BackendProxyOptions): RequestHandler => (
   req: Request,
   res: Response,
   next: NextFunction
-) => {
+): void => {
   req[backendTime] = new Date();
   const backendRequest = request(
     getBackendRequestOptions(req, conf),

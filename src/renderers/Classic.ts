@@ -2,6 +2,7 @@ import path from "path";
 import { readFileSync } from "fs";
 import { IRendererSettings, Renderer } from "./Renderer";
 import { Request, Response } from "express";
+import { ParamsDictionary } from "express-serve-static-core";
 import { IBackendData } from "../types/IBackendData";
 import { FreezeMapper } from "../utils/freeze-map";
 import { ICacheEntry } from "../types/ICacheEntry";
@@ -82,7 +83,7 @@ export class ClassicRenderer extends Renderer {
 
       // Окружение и дополнительная информация
       data.env = this.getEnv();
-      data.query = query;
+      data.query = query as ParamsDictionary;
       data.cookies = cookies;
       // @ts-ignore
       data.freezeMap = this.freezeMap || {};
@@ -186,6 +187,7 @@ export class ClassicRenderer extends Renderer {
   private injectFuncToBEMXJST(instance: iBEMXJST) {
     instance.BEMContext.prototype.getFreezed = (url) =>
       this.freezeMap.linkTo(url);
+    // noinspection JSUnusedGlobalSymbols
     instance.BEMContext.prototype.useMerges = this.settings.useMerges;
   }
 

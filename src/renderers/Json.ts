@@ -1,7 +1,6 @@
-import { Renderer } from "./renderer";
+import { Renderer, IRendererSettings } from "./Renderer";
 import { Response, Request } from "express";
 import { IBackendData } from "../types/IBackendData";
-import { IRendererSettings } from "./Renderer";
 
 export interface IJsonSettings extends IRendererSettings {
   wrap?: boolean;
