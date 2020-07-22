@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import { ParamsDictionary } from "express-serve-static-core";
 import { IBackendData } from "../types/IBackendData";
 import { fixTime } from "../utils/render-time";
 
@@ -30,8 +31,23 @@ export abstract class Renderer {
     fixTime(res);
   }
 
-  protected getEnv(): Record<string, string> {
-    // FIXME: filter variables
-    return process.env;
+  protected getEnv(): ParamsDictionary {
+    return this.filterEnv(process.env);
+  }
+
+  /**
+   * Filter some sensitive environment variables
+   * @param env
+   */
+  protected filterEnv(env: ParamsDictionary): ParamsDictionary {
+    const filtered: ParamsDictionary = {},
+      re = /^(?!npm_*|PWD|HOME|HOSTNAME|NODE_VERSION|PATH)/;
+    Object.keys(env)
+      .filter((key) => re.test(key))
+      .forEach((key) => {
+        filtered[key] = env[key];
+      });
+
+    return filtered;
   }
 }
