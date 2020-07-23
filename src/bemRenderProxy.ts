@@ -12,9 +12,16 @@ import {
 import { patch } from "./middlewares/patch";
 import { Renderer } from "./renderers";
 
+export type engineSelectFunc = (
+  bundle: string,
+  page: string,
+  platform: string
+) => string | undefined;
+
 export class BemRenderProxy {
   readonly app = express();
   public config = config;
+  private engineSelect: engineSelectFunc = () => undefined;
   public renderEngines: Record<string, Renderer> = {};
   private defaultEngine: Renderer;
   private static engineSymbol = Symbol("engine");
@@ -23,7 +30,6 @@ export class BemRenderProxy {
 
   constructor() {
     this.initLogger();
-    this.initEngines();
     this.app
       .disable("x-powered-by")
       .disable("E-tag")
@@ -64,28 +70,18 @@ export class BemRenderProxy {
     this.defaultEngine = this.renderEngines[name];
   }
 
-  private initEngines() {
-    /*
-    this.addEngine(
-      "classic",
-      new ClassicRenderer({
-        debug: config.APP_DEBUG,
-        appEnv: config.APP_ENV,
-        freezeMap: config.FREEZE_MAP,
-        useMerges: config.USE_MERGES,
-        useCache: config.USE_CACHE,
-        cacheTTL: config.CACHE_TTL,
-        cacheSize: config.CACHE_SIZE,
-        bundleFormat: config.BUNDLE_FORMAT,
-        pageFormat: config.PAGE_FORMAT,
-        staticRoot: config.STATIC_ROOT,
-      })
-    );
-     */
+  public setEngineSelectFunc(func: engineSelectFunc): void {
+    this.engineSelect = func;
   }
 
-  private selectEngine(req: Request, _res, next: NextFunction) {
-    req[BemRenderProxy.engineSymbol] = this.defaultEngine;
+  private selectEngine(req: Request, res: Response, next: NextFunction) {
+    const { bundle, page, platform } = res[backendData];
+    const name = this.engineSelect(bundle, page, platform);
+    if (name && this.renderEngines[name]) {
+      req[BemRenderProxy.engineSymbol] = this.renderEngines[name];
+    } else {
+      req[BemRenderProxy.engineSymbol] = this.defaultEngine;
+    }
     next();
   }
 
