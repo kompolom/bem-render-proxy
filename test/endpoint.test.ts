@@ -1,7 +1,9 @@
 import request from "supertest";
 import conf from "../src/cfg";
-import app from "../src/app";
+import { BemRenderProxy } from "../src/bemRenderProxy";
 import { mockBackend } from "./mockServer/server";
+
+const app = new BemRenderProxy().app;
 
 describe("app", () => {
   let server;

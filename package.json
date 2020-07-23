@@ -18,13 +18,11 @@
     "bem"
   ],
   "dependencies": {
-    "body-parser": "^1.14.2",
     "cookie-parser": "^1.4.3",
     "express": "4.17.1",
     "morgan": "^1.6.1",
     "node-telegram-bot-api": "0.50.0",
     "request": "^2.81.0",
-    "rotating-file-stream": "2.1.1",
     "set-cookie-parser": "^2.0.0",
     "yn": "4.0.0"
   },
