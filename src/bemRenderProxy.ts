@@ -27,6 +27,7 @@ export class BemRenderProxy {
     this.app
       .disable("x-powered-by")
       .disable("E-tag")
+      .set("trust proxy", true)
       .use(cookieParser())
       .use(
         backendProxy({
