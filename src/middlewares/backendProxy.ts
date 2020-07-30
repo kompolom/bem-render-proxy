@@ -64,7 +64,7 @@ export const backendProxy = (conf: BackendProxyOptions): RequestHandler => (
   backendRequest.on("error", (error) => {
     errorsHandler(req, res, {
       code: 502,
-      type: "Backend reques error",
+      type: "Backend request error",
       error,
     });
   });
