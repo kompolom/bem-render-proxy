@@ -1,4 +1,5 @@
 import express, { NextFunction, Request, Response } from "express";
+import { ParamsDictionary } from "express-serve-static-core";
 import config from "./cfg";
 import cookieParser from "cookie-parser";
 import morgan from "morgan";
@@ -18,6 +19,10 @@ export type engineSelectFunc = (
   platform: string
 ) => string | undefined;
 
+export interface BrpConfig {
+  static?: ParamsDictionary;
+}
+
 export class BemRenderProxy {
   readonly app = express();
   public config = config;
@@ -28,19 +33,20 @@ export class BemRenderProxy {
   static logFormat =
     ":method :url :status - :response-time ms (backend :backend ms) (render :render-time ms)";
 
-  constructor() {
+  constructor(brpConf: BrpConfig = {}) {
     this.initLogger();
     this.app
       .disable("x-powered-by")
       .disable("E-tag")
       .set("trust proxy", true)
-      .use(cookieParser())
-      .use(
-        backendProxy({
-          host: this.config.BACKEND_HOST,
-          port: this.config.BACKEND_PORT,
-        })
-      );
+      .use(cookieParser());
+    this.initStatic(brpConf.static);
+    this.app.use(
+      backendProxy({
+        host: this.config.BACKEND_HOST,
+        port: this.config.BACKEND_PORT,
+      })
+    );
     if (this.config.APP_ENV === "local") {
       this.app.use(patch(true));
     }
@@ -95,6 +101,13 @@ export class BemRenderProxy {
     morgan.token("render-time", calcRenderTime);
     morgan.token("backend", calcBackendTime);
     this.app.use(morgan(BemRenderProxy.logFormat));
+  }
+
+  private initStatic(staticMap?: ParamsDictionary): void {
+    if (!staticMap) return;
+    Object.keys(staticMap).forEach((url) => {
+      this.app.use(url, express.static(staticMap[url]));
+    });
   }
 
   private handleRequest(req: Request, res: Response) {
