@@ -51,7 +51,7 @@ export class ClassicRenderer extends Renderer {
         res.statusCode >= 500 &&
         this.settings.appEnv === "local"
       ) {
-        return new JsonRenderer({ wrap: true }).render(req, res, data);
+        return new JsonRenderer().render(req, res, data);
       }
       const query = req.query,
         cookies = req.cookies,
@@ -90,11 +90,7 @@ export class ClassicRenderer extends Renderer {
 
       if (this.settings.debug && query.json) {
         const json = jsonCut(data, query.json as string);
-        return new JsonRenderer({ wrap: true }).render(
-          req,
-          res,
-          json as IBackendData
-        );
+        return new JsonRenderer().render(req, res, json as IBackendData);
       }
 
       let BEMTREE: iBEMTREE,
@@ -133,7 +129,7 @@ export class ClassicRenderer extends Renderer {
 
       if (this.settings.debug && query.bemjson) {
         const partialBemjson = jsonCut(bemjson, query.bemjson as string);
-        return new JsonRenderer({ wrap: true }).render(
+        return new JsonRenderer().render(
           req,
           res,
           partialBemjson as IBackendData
