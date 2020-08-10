@@ -17,7 +17,11 @@ const stderrChannel = (
   res: Response,
   opts: IErrorsHandlerOpts
 ) => {
-  console.error(JSON.stringify(opts));
+  if (config.APP_DEBUG && opts.error) {
+    throw opts.error;
+  } else {
+    console.error(JSON.stringify(opts, null, 2));
+  }
 };
 
 channels.push(stderrChannel);
