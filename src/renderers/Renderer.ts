@@ -17,7 +17,7 @@ export abstract class Renderer {
     this.settings = { ...defaults, ...settings };
   }
 
-  public abstract async render(
+  public abstract render(
     req: Request,
     res: Response,
     data: IBackendData
