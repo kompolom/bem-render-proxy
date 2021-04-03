@@ -3,7 +3,7 @@ import {
   ErrorChannel,
   ErrorHandler,
   IErrorsHandlerOpts,
-} from "../dist/utils/errors-handler";
+} from "../src/utils/errors-handler";
 
 class MockChannel implements ErrorChannel {
   send(req: Request, res: Response, opts: IErrorsHandlerOpts): void {
