@@ -1,11 +1,12 @@
 import { Request, Response, NextFunction, RequestHandler } from "express";
 import { IncomingMessage, request, RequestOptions } from "http";
 import { bypassHeaders } from "../utils/bypassHeaders";
-import errorsHandler from "../utils/errors-handler";
+import { ErrorHandler } from "../utils/errors-handler";
 
 export interface BackendProxyOptions {
   host: string;
   port: number;
+  errorHandler: ErrorHandler;
 }
 export const backendData = Symbol("backendData");
 export const backendTime = Symbol("backendTime");
@@ -45,7 +46,7 @@ export const backendProxy = (conf: BackendProxyOptions): RequestHandler => (
         try {
           res[backendData] = JSON.parse(body);
         } catch (error) {
-          errorsHandler(req, res, {
+          conf.errorHandler.handle(req, res, {
             code: 502,
             type: "SERVER JSON error",
             error,
@@ -62,7 +63,7 @@ export const backendProxy = (conf: BackendProxyOptions): RequestHandler => (
   );
 
   backendRequest.on("error", (error) => {
-    errorsHandler(req, res, {
+    conf.errorHandler.handle(req, res, {
       code: 502,
       type: "Backend request error",
       error,

@@ -3,7 +3,11 @@ import { ParamsDictionary } from "express-serve-static-core";
 import config from "./cfg";
 import cookieParser from "cookie-parser";
 import morgan from "morgan";
-import errorsHandler from "./utils/errors-handler";
+import {
+  ErrorChannel,
+  ErrorHandler,
+  StderrChannel,
+} from "./utils/errors-handler";
 import { calcRenderTime } from "./utils/render-time";
 import {
   backendData,
@@ -26,6 +30,7 @@ export interface BrpConfig {
 export class BemRenderProxy {
   readonly app = express();
   public config = config;
+  public errorHandler: ErrorHandler;
   private engineSelect: engineSelectFunc = () => undefined;
   public renderEngines: Record<string, Renderer> = {};
   private defaultEngine: Renderer;
@@ -45,6 +50,7 @@ export class BemRenderProxy {
       backendProxy({
         host: this.config.BACKEND_HOST,
         port: this.config.BACKEND_PORT,
+        errorHandler: this.errorHandler,
       })
     );
     if (this.config.APP_ENV === "local") {
@@ -52,6 +58,9 @@ export class BemRenderProxy {
     }
     this.app.use(this.selectEngine.bind(this));
     this.app.all("*", this.handleRequest.bind(this));
+    this.errorHandler = new ErrorHandler([
+      new StderrChannel({ debug: this.config.APP_DEBUG }),
+    ]);
   }
 
   /**
@@ -78,6 +87,10 @@ export class BemRenderProxy {
 
   public setEngineSelectFunc(func: engineSelectFunc): void {
     this.engineSelect = func;
+  }
+
+  public addErrorChannel(channel: ErrorChannel): void {
+    this.errorHandler.addChannel(channel);
   }
 
   private selectEngine(req: Request, res: Response, next: NextFunction) {
@@ -113,7 +126,7 @@ export class BemRenderProxy {
   private handleRequest(req: Request, res: Response) {
     const renderer = req[BemRenderProxy.engineSymbol] as Renderer;
     renderer.render(req, res, res[backendData]).catch((errData) => {
-      errorsHandler(req, res, errData);
+      this.errorHandler.handle(req, res, errData);
     });
   }
 }

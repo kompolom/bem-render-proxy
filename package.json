@@ -1,7 +1,7 @@
 {
   "author": "Evgeniy Baranov <master@kompolom.ru>",
   "name": "bem-render-proxy",
-  "version": "0.14.2",
+  "version": "0.15.0",
   "description": "Render proxy for bem projects. Render data with BEMHTML and BEMTREE or any other renderer",
   "main": "dist/index.js",
   "repository": "https://github.com/kompolom/bem-render-proxy",
@@ -21,12 +21,12 @@
     "cookie-parser": "1.4.5",
     "express": "4.17.1",
     "morgan": "1.10.0",
-    "node-telegram-bot-api": "0.50.0",
     "request": "2.88.2",
     "set-cookie-parser": "2.4.8",
     "yn": "4.0.0"
   },
   "devDependencies": {
+    "@jest-mock/express": "^1.4.1",
     "@types/express": "^4.17.6",
     "@types/jest": "^26.0.1",
     "@types/node": "^14.0.14",
