@@ -21,8 +21,6 @@
     "cookie-parser": "1.4.5",
     "express": "4.17.1",
     "morgan": "1.10.0",
-    "request": "2.88.2",
-    "set-cookie-parser": "2.4.8",
     "yn": "4.0.0"
   },
   "devDependencies": {
