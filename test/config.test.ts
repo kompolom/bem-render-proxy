@@ -1,7 +1,7 @@
 process.env.APP_ENV = "stage";
 process.env.APP_DEBUG = "yes";
 
-import config from "../src/cfg";
+import { config } from "../src/cfg";
 
 describe("config", () => {
   it("Should return value from env", () => {

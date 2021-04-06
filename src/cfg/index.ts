@@ -19,7 +19,7 @@ const envOpts = OPT_NAMES.reduce(function (opts, optName) {
 
 const resolvedOpts = Object.assign({}, defaults, envOpts);
 
-export default Object.assign(
+export const config = Object.assign(
   {
     USE_MERGES:
       resolvedOpts.APP_ENV === "production" || resolvedOpts.APP_ENV === "stage",

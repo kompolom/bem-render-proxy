@@ -1,20 +1,15 @@
 import { Request, Response, NextFunction, RequestHandler } from "express";
-import { IncomingMessage, request, RequestOptions } from "http";
+import { IncomingMessage } from "http";
 import { bypassHeaders } from "../utils/bypassHeaders";
 import { ErrorHandler } from "../utils/errors-handler";
+import { IBackend } from "../types/IBackend";
 
 export interface BackendProxyOptions {
-  host: string;
-  port: number;
   errorHandler: ErrorHandler;
 }
 export const backendData = Symbol("backendData");
 export const backendTime = Symbol("backendTime");
-export const RENDER_CONTENT_TYPE = "application/bem+json";
-export const RENDER_HEADER = "x-render";
-
-const CONTENT_TYPE_HEADER = "content-type";
-const FORWARDED_HOST_HEADER = "X-Forwarded-Host";
+export const backendSymbol = Symbol("backend");
 
 export const backendProxy = (conf: BackendProxyOptions): RequestHandler => (
   req: Request,
@@ -22,43 +17,30 @@ export const backendProxy = (conf: BackendProxyOptions): RequestHandler => (
   next: NextFunction
 ): void => {
   req[backendTime] = new Date();
-  const backendRequest = request(
-    getBackendRequestOptions(req, conf),
-    (backendResponse) => {
-      if (!checkNeedRender(backendResponse)) {
-        return proxyBackendResponse(backendResponse, res);
+
+  const backend: IBackend = req[backendSymbol];
+  const backendRequest = backend.proxy(
+    req,
+    (backendMsg) => {
+      res[backendTime] = new Date();
+      res.writeHead(backendMsg.statusCode, backendMsg.headers);
+      backendMsg.pipe(res);
+    },
+    (backendResponse, body) => {
+      res[backendTime] = new Date();
+      res.status(backendResponse.statusCode);
+      bypassHeaders(backendResponse, res);
+      try {
+        res[backendData] = backend.parse(body);
+      } catch (error) {
+        conf.errorHandler.handle(req, res, {
+          code: 502,
+          type: "Backend data format error",
+          error,
+          body,
+        });
       }
-      let dataArray: Buffer[] = [];
-
-      backendResponse.on("readable", () => {
-        const chunk = backendResponse.read();
-        if (chunk) {
-          dataArray.push(chunk);
-        }
-      });
-
-      backendResponse.on("end", () => {
-        res[backendTime] = new Date();
-        res.status(backendResponse.statusCode);
-        bypassHeaders(backendResponse, res);
-        const body = Buffer.concat(dataArray).toString("utf8");
-        dataArray = []; // clear data
-        try {
-          res[backendData] = JSON.parse(body);
-        } catch (error) {
-          conf.errorHandler.handle(req, res, {
-            code: 502,
-            type: "SERVER JSON error",
-            error,
-            body,
-          });
-        }
-        next();
-      });
-
-      backendResponse.on("error", (e) => {
-        throw e;
-      });
+      next();
     }
   );
 
@@ -69,7 +51,6 @@ export const backendProxy = (conf: BackendProxyOptions): RequestHandler => (
       error,
     });
   });
-  req.pipe(backendRequest);
 };
 
 export function calcBackendTime(req: Request, res: Response): string {
@@ -85,36 +66,7 @@ export function calcBackendTime(req: Request, res: Response): string {
   return ms.toFixed(3);
 }
 
-function checkNeedRender(backendResponse: IncomingMessage): boolean {
-  return (
-    backendResponse.headers[CONTENT_TYPE_HEADER] === RENDER_CONTENT_TYPE ||
-    Boolean(backendResponse.headers[RENDER_HEADER])
-  );
-}
-
-function getBackendRequestOptions(
-  req: Request,
-  conf: BackendProxyOptions
-): RequestOptions {
-  const headers = Object.assign({}, req.headers, {
-    accept: RENDER_CONTENT_TYPE + ";" + req.headers.accept,
-    [FORWARDED_HOST_HEADER]: req.headers.host,
-  });
-  delete headers.host;
-
-  return {
-    method: req.method,
-    hostname: conf.host,
-    port: conf.port,
-    path: req.url,
-    headers,
-  };
-}
-
-function proxyBackendResponse(
-  backendResponse: IncomingMessage,
-  res: Response
-): void {
-  res.writeHead(backendResponse.statusCode, backendResponse.headers);
-  backendResponse.pipe(res);
+function bypassResponse(from: IncomingMessage, to: Response): void {
+  to.writeHead(from.statusCode, from.headers);
+  from.pipe(to);
 }

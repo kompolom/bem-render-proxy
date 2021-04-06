@@ -6,9 +6,8 @@ import {
 } from "../src/utils/errors-handler";
 
 class MockChannel implements ErrorChannel {
-  send(req: Request, res: Response, opts: IErrorsHandlerOpts): void {
-    console.log();
-  }
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  send(req: Request, res: Response, opts: IErrorsHandlerOpts): void {}
 }
 
 class MockResponse {

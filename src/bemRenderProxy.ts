@@ -1,6 +1,5 @@
 import express, { NextFunction, Request, Response } from "express";
 import { ParamsDictionary } from "express-serve-static-core";
-import config from "./cfg";
 import cookieParser from "cookie-parser";
 import morgan from "morgan";
 import {
@@ -13,9 +12,11 @@ import {
   backendData,
   backendProxy,
   calcBackendTime,
+  backendSymbol,
 } from "./middlewares/backendProxy";
 import { patch } from "./middlewares/patch";
 import { Renderer } from "./renderers";
+import { IBackend } from "./types/IBackend";
 
 export type engineSelectFunc = (
   bundle: string,
@@ -23,33 +24,59 @@ export type engineSelectFunc = (
   platform: string
 ) => string | undefined;
 
+export type backendSelectFunc = (
+  req: Request,
+  backends: Record<string, IBackend>
+) => IBackend;
+
 export interface BrpConfig {
+  config: Record<string, unknown>;
+  backends: IBackend[];
+  backendSelectFunc?: backendSelectFunc;
+  engineSelectFunc?: engineSelectFunc;
   static?: ParamsDictionary;
 }
 
 export class BemRenderProxy {
   readonly app = express();
-  public config = config;
+  public config: Record<string, unknown>;
   public errorHandler: ErrorHandler;
-  private engineSelect: engineSelectFunc = () => undefined;
+  private readonly engineSelect: engineSelectFunc = () => undefined;
   public renderEngines: Record<string, Renderer> = {};
   private defaultEngine: Renderer;
+  private readonly backends: Record<string, IBackend> = {};
+  private backendSelectFunc?: backendSelectFunc;
   private static engineSymbol = Symbol("engine");
   static logFormat =
     ":method :url :status - :response-time ms (backend :backend ms) (render :render-time ms)";
 
-  constructor(brpConf: BrpConfig = {}) {
+  constructor(brpConf: BrpConfig) {
+    this.config = brpConf.config;
     this.initLogger();
+    this.errorHandler = new ErrorHandler([
+      new StderrChannel({ debug: Boolean(this.config.APP_DEBUG) }),
+    ]);
+
+    if (!brpConf.backends.length) {
+      throw new Error("BemRenderProxy requires at least one backend");
+    }
+    Object.defineProperty(this.backends, "default", {
+      value: brpConf.backends[0],
+    });
+    brpConf.backends.forEach((backend, i) => {
+      this.backends[backend.name] = backend;
+    });
+
+    brpConf.engineSelectFunc && (this.engineSelect = brpConf.engineSelectFunc);
+
     this.app
       .disable("x-powered-by")
       .disable("E-tag")
       .set("trust proxy", true)
       .use(cookieParser());
     this.initStatic(brpConf.static);
-    this.app.use(
+    this.app.use(this.selectBackend.bind(this)).use(
       backendProxy({
-        host: this.config.BACKEND_HOST,
-        port: this.config.BACKEND_PORT,
         errorHandler: this.errorHandler,
       })
     );
@@ -58,9 +85,6 @@ export class BemRenderProxy {
     }
     this.app.use(this.selectEngine.bind(this));
     this.app.all("*", this.handleRequest.bind(this));
-    this.errorHandler = new ErrorHandler([
-      new StderrChannel({ debug: this.config.APP_DEBUG }),
-    ]);
   }
 
   /**
@@ -85,10 +109,6 @@ export class BemRenderProxy {
     this.defaultEngine = this.renderEngines[name];
   }
 
-  public setEngineSelectFunc(func: engineSelectFunc): void {
-    this.engineSelect = func;
-  }
-
   public addErrorChannel(channel: ErrorChannel): void {
     this.errorHandler.addChannel(channel);
   }
@@ -100,6 +120,22 @@ export class BemRenderProxy {
       req[BemRenderProxy.engineSymbol] = this.renderEngines[name];
     } else {
       req[BemRenderProxy.engineSymbol] = this.defaultEngine;
+    }
+    next();
+  }
+
+  /**
+   * Select which backend will be used
+   * @param req
+   * @param res
+   * @param next
+   * @private
+   */
+  private selectBackend(req: Request, res: Response, next: NextFunction): void {
+    if (this.backendSelectFunc) {
+      req[backendSymbol] = this.backendSelectFunc(req, this.backends);
+    } else {
+      req[backendSymbol] = this.backends.default;
     }
     next();
   }

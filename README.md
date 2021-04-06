@@ -6,9 +6,11 @@ bem-render-proxy
 Минимальный рабочий пример для классического стека (BEMXJST):
 
 ```javascript
-const { BemRenderProxy, ClassicRenderer } = require('bem-render-proxy'),
- brp = new BemRenderProxy(), // Создаем экземпляр прокси
-    conf = brp.config, // Ссылка на конфиг
+const { BemRenderProxy, ClassicRenderer, ClassicBackend, conf } = require('bem-render-proxy'),
+ brp = new BemRenderProxy({
+     config: conf,
+     backends: [new ClassicBackend({ host: 'localhost', port: 8080, name: 'classic' })]
+ }), // Создаем экземпляр прокси
     rendererConfig = { // Опции для шаблонизатора
         bundleFormat : conf.BUNDLE_FORMAT,
         pageFormat : conf.PAGE_FORMAT
@@ -18,6 +20,25 @@ const { BemRenderProxy, ClassicRenderer } = require('bem-render-proxy'),
 brp.addEngine('classic', new ClassicRenderer(rendererConfig), true);
 // Запускаем прокси на порту по-умолчанию
 brp.start();
+```
+
+## Бекенды
+
+Возможно зарегистрировать несколько бекендов и в зависимости от различных условий направлять запрос в указанный бекенд. Функция выбора бекенда может быть передана в конструктор BRP. Иначе, используется первый бекенд в списке.
+
+Использование нескольких бекендов:
+```javascript
+import { BemRenderProxy, Backend } from "bem-render-proxy";
+
+new BemRenderProxy({
+    backends: [
+        new Backend({ host: '8.8.8.8', port: 8080, name: 'backend1' }),
+        new Backend({ host: '4.4.4.4', port: 3000, name: 'backend2' })
+    ],
+    backendSelectFunc: (request, backends) => {
+        return backends['backend2'];
+    }
+})
 ```
 
 ## Шаблонизаторы
@@ -63,12 +84,12 @@ module.exports = (data) => {
 GET myproject.dev/?patch=my-path
 ```
 
-```js
+```javascript
 // Данные от backend
 {
     a: 10,
-    b: 20
-}
+    b: 20,
+};
 ```
 
 ```js
@@ -80,7 +101,7 @@ GET myproject.dev/?patch=my-path
 }
 ```
 
-#### Работа с нескольки патчами
+#### Работа с несколькими патчами
 
 ```
 GET myproject.dev/?patch=feature1;feature2
@@ -119,7 +140,7 @@ $ borschik freeze --input=js > freeze-info.json
 ```javascript
 // FREEZEMAP
 {
-    "my-scripts/long/link/index.min.js" : "./freezed/_/dsdgjlka342jfsgjslkgjs41jgls1k8gjslkgs.js"
+    "my-scripts/long/link/index.min.js": "./freezed/_/dsdgjlka342jfsgjslkgjs41jgls1k8gjslkgs.js"
 }
 
 // BEMTREE

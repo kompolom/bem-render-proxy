@@ -1,14 +1,26 @@
 import request from "supertest";
-import conf from "../src/cfg";
-import { BemRenderProxy } from "../src/bemRenderProxy";
+import { config } from "../src/cfg";
+import { BemRenderProxy } from "../src";
 import { mockBackend } from "./mockServer/server";
+import { ClassicBackend } from "../src";
 
-const app = new BemRenderProxy().app;
+class MockBackend extends ClassicBackend {}
+
+const app = new BemRenderProxy({
+  config: config,
+  backends: [
+    new MockBackend({
+      name: "mock",
+      port: config.BACKEND_PORT,
+      host: config.BACKEND_HOST,
+    }),
+  ],
+}).app;
 
 describe("app", () => {
   let server;
   beforeAll(() => {
-    server = mockBackend.listen(conf.BACKEND_PORT);
+    server = mockBackend.listen(config.BACKEND_PORT);
   });
   afterAll(() => {
     server.close();
@@ -29,7 +41,7 @@ describe("app", () => {
     request(app)
       .get("/render")
       .expect("Content-Type", "text/html; charset=utf-8")
-      .end((err, res) => {
+      .end(() => {
         done();
       });
   });
