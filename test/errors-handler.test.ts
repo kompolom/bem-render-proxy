@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import { getMockRes } from "@jest-mock/express";
 import {
   ErrorChannel,
   ErrorHandler,
@@ -20,26 +21,39 @@ class MockResponse {
 }
 
 describe("errors-handler", () => {
-  let req, res, opts;
+  let req, res, opts, eh;
   beforeEach(() => {
     req = {} as Request;
     res = new MockResponse() as Response;
     opts = { error: new Error("Test") };
+    eh = new ErrorHandler([new MockChannel()]);
   });
 
   it("should has handle method", () => {
-    const eh = new ErrorHandler([new MockChannel()]);
     expect(typeof eh.handle).toBe("function");
   });
 
   it("should terminate request", () => {
-    const terminateSpy = jest
-      .spyOn(ErrorHandler, "terminateRequest")
-      .mockImplementation(jest.fn());
-
-    const eh = new ErrorHandler([new MockChannel()]);
+    const { res } = getMockRes({});
+    const spyFinish = jest.spyOn(res, "end");
+    const spyHeaders = jest.spyOn(res, "status");
     eh.handle(req, res, opts);
-    terminateSpy.mockRestore();
+
+    expect(spyFinish).toBeCalledTimes(1);
+    expect(spyHeaders).toBeCalledTimes(1);
+  });
+
+  it("should not to try end finished request", () => {
+    const { res } = getMockRes({
+      headersSent: true,
+      writableEnded: true,
+    });
+    const spyFinish = jest.spyOn(res, "end");
+    const spyHeaders = jest.spyOn(res, "status");
+    eh.handle(req, res, opts);
+
+    expect(spyFinish).not.toBeCalled();
+    expect(spyHeaders).not.toBeCalled();
   });
 
   it("should call each error channel", () => {
