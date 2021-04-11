@@ -55,6 +55,7 @@ export class ErrorHandler {
   }
 
   static terminateRequest(res: Response, opts: IErrorsHandlerOpts): void {
-    res.status(opts.code || 500).end(`${opts.type}  ${opts.error.message}`);
+    res.headersSent || res.status(opts.code || 500);
+    res.writableEnded || res.end(`${opts.type}  ${opts.error.message}`);
   }
 }
