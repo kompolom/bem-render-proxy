@@ -15,13 +15,16 @@ interface IClassicSettings extends IRendererSettings {
   lang?: string;
   appEnv?: string;
   freezeMap?: string;
+  normalizeFreezeMap?: boolean;
   useMerges?: boolean;
   useCache?: boolean;
   cacheTTL?: number;
   cacheSize?: number;
   bundleFormat: string;
   pageFormat: string;
+  mergeFormat?: string;
   staticRoot?: string;
+  basePath?: string;
 }
 
 const defaultSettings: Partial<IClassicSettings> = { lang: "ru" };
@@ -35,7 +38,10 @@ export class ClassicRenderer extends Renderer {
     super(settings, defaultSettings);
     this.cache = new Map();
     this.freezeMap = this.settings.freezeMap
-      ? ClassicRenderer.loadFreezeMap(this.settings.freezeMap)
+      ? ClassicRenderer.loadFreezeMap(
+          this.settings.freezeMap,
+          this.settings.normalizeFreezeMap
+        )
       : new FreezeMapper();
 
     if (this.settings.useCache && this.settings.cacheTTL) {
@@ -59,11 +65,13 @@ export class ClassicRenderer extends Renderer {
         user = data.data.user,
         cacheKey = ClassicRenderer.buildCacheKey(req.url, user),
         cached = this.cache.get(cacheKey),
-        bundle = new BundleScheme(
-          this.settings.bundleFormat,
-          this.settings.pageFormat,
-          this.settings.staticRoot
-        );
+        bundle = new BundleScheme({
+          bundleFormat: this.settings.bundleFormat,
+          pageFormat: this.settings.pageFormat,
+          mergeFormat: this.settings.mergeFormat,
+          baseUrl: this.settings.staticRoot,
+          basePath: this.settings.basePath,
+        });
 
       // @ts-ignore
       if (cached && new Date() - cached.timestamp < this.settings.cacheTTL) {
@@ -78,7 +86,7 @@ export class ClassicRenderer extends Renderer {
 
       // Устанавливает url для статики
       data.platform = bundle.platform;
-      data.bundleUrl = bundle.baseUrl;
+      data.bundleUrl = bundle.bundleUrl;
       data.lang || (data.lang = this.settings.lang);
 
       // Окружение и дополнительная информация
