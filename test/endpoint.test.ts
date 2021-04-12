@@ -45,4 +45,36 @@ describe("app", () => {
         done();
       });
   });
+
+  describe("backends", () => {
+    let app, backendSelectFunc;
+    beforeEach(() => {
+      backendSelectFunc = jest.fn((req, backends) => backends.default);
+      app = new BemRenderProxy({
+        config: config,
+        backendSelectFunc: backendSelectFunc,
+        backends: [
+          new MockBackend({
+            name: "mock1",
+            port: config.BACKEND_PORT,
+            host: config.BACKEND_HOST,
+          }),
+          new MockBackend({
+            name: "mock2",
+            port: config.BACKEND_PORT,
+            host: config.BACKEND_HOST,
+          }),
+        ],
+      }).app;
+    });
+
+    it("should call backendSelectFunc", (done) => {
+      request(app)
+        .get("/")
+        .end(() => {
+          expect(backendSelectFunc).toBeCalledWith();
+          done();
+        });
+    });
+  });
 });

@@ -66,6 +66,7 @@ export class BemRenderProxy {
     brpConf.backends.forEach((backend, i) => {
       this.backends[backend.name] = backend;
     });
+    this.backendSelectFunc = brpConf.backendSelectFunc;
 
     brpConf.engineSelectFunc && (this.engineSelect = brpConf.engineSelectFunc);
 
