@@ -21,7 +21,8 @@ import { IBackend } from "./types/IBackend";
 export type engineSelectFunc = (
   bundle: string,
   page: string,
-  platform: string
+  platform: string,
+  req: Request
 ) => string | undefined;
 
 export type backendSelectFunc = (
@@ -48,7 +49,7 @@ export class BemRenderProxy {
   private backendSelectFunc?: backendSelectFunc;
   private static engineSymbol = Symbol("engine");
   static logFormat =
-    ":method :url :status - :response-time ms (backend :backend ms) (render :render-time ms)";
+    ":method :url :status - :response-time ms (backend :backend-time ms) (render :render-time ms) backend :backend";
 
   constructor(brpConf: BrpConfig) {
     this.config = brpConf.config;
@@ -63,7 +64,7 @@ export class BemRenderProxy {
     Object.defineProperty(this.backends, "default", {
       value: brpConf.backends[0],
     });
-    brpConf.backends.forEach((backend, i) => {
+    brpConf.backends.forEach((backend) => {
       this.backends[backend.name] = backend;
     });
     this.backendSelectFunc = brpConf.backendSelectFunc;
@@ -116,7 +117,7 @@ export class BemRenderProxy {
 
   private selectEngine(req: Request, res: Response, next: NextFunction) {
     const { bundle, page, platform } = res[backendData];
-    const name = this.engineSelect(bundle, page, platform);
+    const name = this.engineSelect(bundle, page, platform, req);
     if (name && this.renderEngines[name]) {
       req[BemRenderProxy.engineSymbol] = this.renderEngines[name];
     } else {
@@ -149,7 +150,8 @@ export class BemRenderProxy {
 
   private initLogger() {
     morgan.token("render-time", calcRenderTime);
-    morgan.token("backend", calcBackendTime);
+    morgan.token("backend-time", calcBackendTime);
+    morgan.token("backend", (req: Request) => req[backendSymbol].name);
     this.app.use(morgan(BemRenderProxy.logFormat));
   }
 

@@ -63,7 +63,7 @@ export class BundleScheme {
    * @example http://example.com/deskop/auth
    */
   get mergedUrl(): string {
-    return this.baseUrl ? `${this.baseUrl}/${this.merge}` : this.merge;
+    return [this.baseUrl, this.merge].join("/");
   }
 
   /**
@@ -71,7 +71,7 @@ export class BundleScheme {
    * @example http://example.com/desktop.pages/page_auth_login
    */
   get bundleUrl(): string {
-    return this.baseUrl ? `${this.baseUrl}/${this.bundle}` : this.bundle;
+    return [this.baseUrl, this.bundle].join("/");
   }
 
   /**

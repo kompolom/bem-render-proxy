@@ -68,10 +68,10 @@ describe("bundle-scheme", function () {
       bundleScheme.scope = "shop";
       bundleScheme.view = "index";
       expect(bundleScheme.getFileUrl("js")).toBe(
-        "desktop.pages/page_shop_index/page_shop_index.js"
+        "/desktop.pages/page_shop_index/page_shop_index.js"
       );
       expect(bundleScheme.getFileUrl("js", "ru")).toBe(
-        "desktop.pages/page_shop_index/page_shop_index.ru.js"
+        "/desktop.pages/page_shop_index/page_shop_index.ru.js"
       );
     });
 
@@ -101,10 +101,10 @@ describe("bundle-scheme", function () {
       bundleScheme.scope = "shop";
       bundleScheme.view = "index";
       expect(bundleScheme.getFileUrl("css", null, true)).toBe(
-        "pages/desktop/index/index.css"
+        "/pages/desktop/index/index.css"
       );
       expect(bundleScheme.getFileUrl("js", "ru", true)).toBe(
-        "pages/desktop/index/index.ru.js"
+        "/pages/desktop/index/index.ru.js"
       );
     });
   });
@@ -120,7 +120,7 @@ describe("bundle-scheme", function () {
       bundleScheme.platform = "desktop";
       bundleScheme.scope = "shop";
       bundleScheme.view = "index";
-      expect(bundleScheme.bundleUrl).toBe("pages/desktop/page_shop_index");
+      expect(bundleScheme.bundleUrl).toBe("/pages/desktop/page_shop_index");
     });
   });
 });
