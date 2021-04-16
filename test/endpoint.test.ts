@@ -72,7 +72,7 @@ describe("app", () => {
       request(app)
         .get("/")
         .end(() => {
-          expect(backendSelectFunc).toBeCalledWith();
+          expect(backendSelectFunc).toBeCalled();
           done();
         });
     });

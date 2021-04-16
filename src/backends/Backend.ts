@@ -43,8 +43,8 @@ export class Backend implements IBackend {
     return false;
   }
 
-  parse(data: string): unknown {
-    return JSON.parse(data);
+  parse(data: unknown): unknown {
+    return JSON.parse(data as string);
   }
 
   protected getRequestOptions(req: Request): RequestOptions {

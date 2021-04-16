@@ -10,7 +10,7 @@ export interface IBackend {
   name: string;
   proxy: (req: Request, bypass: bypassCb, render: renderCb) => ClientRequest;
   checkNeedRender: (backendMessage: IncomingMessage) => boolean;
-  parse: (data: unknown) => unknown;
+  parse: (data) => unknown;
 }
 
 export interface IBackendOptions {
