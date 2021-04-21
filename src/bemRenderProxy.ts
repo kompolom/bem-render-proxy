@@ -151,7 +151,7 @@ export class BemRenderProxy {
   private initLogger() {
     morgan.token("render-time", calcRenderTime);
     morgan.token("backend-time", calcBackendTime);
-    morgan.token("backend", (req: Request) => req[backendSymbol].name);
+    morgan.token("backend", (req: Request) => req[backendSymbol]?.name);
     this.app.use(morgan(BemRenderProxy.logFormat));
   }
 
