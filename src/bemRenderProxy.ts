@@ -1,4 +1,9 @@
-import express, { NextFunction, Request, Response } from "express";
+import express, {
+  NextFunction,
+  Request,
+  RequestHandler,
+  Response,
+} from "express";
 import { ParamsDictionary } from "express-serve-static-core";
 import cookieParser from "cookie-parser";
 import morgan from "morgan";
@@ -30,12 +35,30 @@ export type backendSelectFunc = (
   backends: Record<string, IBackend>
 ) => IBackend;
 
+export enum Phases {
+  beforeBackend,
+  afterBackend,
+}
+
+export type middlewareConfig = {
+  phase: Phases;
+  middleware: RequestHandler;
+};
+
 export interface BrpConfig {
   config: Record<string, unknown>;
   backends: IBackend[];
   backendSelectFunc?: backendSelectFunc;
   engineSelectFunc?: engineSelectFunc;
+  /**
+   * Static files mapping
+   */
   static?: ParamsDictionary;
+
+  /**
+   * Additional express middlewares.
+   */
+  middlewares?: middlewareConfig[];
 }
 
 export class BemRenderProxy {
@@ -77,6 +100,9 @@ export class BemRenderProxy {
       .set("trust proxy", true)
       .use(cookieParser());
     this.initStatic(brpConf.static);
+
+    this.addMiddlewares(Phases.beforeBackend, brpConf.middlewares);
+
     this.app.use(this.selectBackend.bind(this)).use(
       backendProxy({
         errorHandler: this.errorHandler,
@@ -85,6 +111,9 @@ export class BemRenderProxy {
     if (this.config.APP_ENV === "local") {
       this.app.use(patch(true));
     }
+
+    this.addMiddlewares(Phases.afterBackend, brpConf.middlewares);
+
     this.app.use(this.selectEngine.bind(this));
     this.app.all("*", this.handleRequest.bind(this));
   }
@@ -160,6 +189,16 @@ export class BemRenderProxy {
     Object.keys(staticMap).forEach((url) => {
       this.app.use(url, express.static(staticMap[url]));
     });
+  }
+
+  /**
+   * Добавляет дополнительные middleware в express
+   */
+  private addMiddlewares(phase: Phases, middlewares: middlewareConfig[]): void {
+    if (!middlewares?.length) return;
+    middlewares
+      .filter((conf) => conf.phase === phase)
+      .forEach((conf) => this.app.use(conf.middleware));
   }
 
   private handleRequest(req: Request, res: Response) {
