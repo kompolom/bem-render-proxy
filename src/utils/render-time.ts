@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 
-export const timeSymbol = Symbol("time");
+export const timeSymbol = "__BRP_TIME__";
 
 export function fixTime(r: Request | Response): void {
   r[timeSymbol] || (r[timeSymbol] = process.hrtime());
