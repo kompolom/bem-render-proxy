@@ -7,7 +7,7 @@ export interface IBackendData {
   lang: string;
   platform: string;
   description: string;
-  data: unknown;
+  data: ParamsDictionary;
   bundleUrl?: string;
   env?: ParamsDictionary;
   cookies?: ParamsDictionary;

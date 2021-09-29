@@ -59,10 +59,9 @@ export class ClassicRenderer extends Renderer {
       ) {
         return new JsonRenderer().render(req, res, data);
       }
-      const query = req.query,
-        cookies = req.cookies,
-        // @ts-ignore
-        user = data.data.user,
+      const query = data.query || req.query,
+        cookies = data.cookies || req.cookies,
+        user = data.data ? data.data.user : {},
         cacheKey = ClassicRenderer.buildCacheKey(req.url, user),
         cached = this.cache.get(cacheKey),
         bundle = new BundleScheme({
