@@ -4,3 +4,4 @@ export * from "./backends";
 export * from "./cfg";
 export * from "./types/IBackend";
 export { Request, Response } from "express";
+export { backendData as backendDataSymbol } from "./middlewares/backendProxy";

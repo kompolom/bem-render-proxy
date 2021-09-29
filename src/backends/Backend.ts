@@ -75,7 +75,7 @@ export class Backend implements IBackend {
     this.receiveBody(backendResponse, render);
   }
 
-  private receiveBody(res: IncomingMessage, callback: renderCb) {
+  protected receiveBody(res: IncomingMessage, callback: renderCb): void {
     let dataArray: Buffer[] = [];
 
     res.on("readable", () => {
