@@ -1,7 +1,7 @@
 {
   "author": "Evgeniy Baranov <master@kompolom.ru>",
   "name": "bem-render-proxy",
-  "version": "0.18.1",
+  "version": "0.18.2",
   "description": "Render proxy for bem projects. Render data with BEMHTML and BEMTREE or any other renderer",
   "main": "dist/index.js",
   "repository": "https://github.com/kompolom/bem-render-proxy",
