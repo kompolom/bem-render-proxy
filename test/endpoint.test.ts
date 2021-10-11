@@ -1,5 +1,5 @@
 import request from "supertest";
-import { config } from "../src/cfg";
+import { config } from "../src";
 import { BemRenderProxy } from "../src";
 import { mockBackend } from "./mockServer/server";
 import { ClassicBackend } from "../src";

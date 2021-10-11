@@ -2,19 +2,23 @@ import { Request, Response } from "express";
 import { ParamsDictionary } from "express-serve-static-core";
 import { IBackendData } from "../types/IBackendData";
 import { fixTime } from "../utils/render-time";
+import { ILogger } from "../types/ILogger";
 
 export interface IRendererSettings {
   debug?: boolean;
+  logger?: ILogger;
 }
 
 export abstract class Renderer {
   protected settings: IRendererSettings;
+  protected logger: ILogger;
 
   constructor(
     settings: Partial<IRendererSettings>,
     defaults: Partial<IRendererSettings>
   ) {
     this.settings = { ...defaults, ...settings };
+    this.logger = this.settings.logger || console;
   }
 
   public abstract render(

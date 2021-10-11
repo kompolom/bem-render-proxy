@@ -22,6 +22,8 @@ import {
 import { patch } from "./middlewares/patch";
 import { Renderer } from "./renderers";
 import { IBackend } from "./types/IBackend";
+import { ILogger } from "./types/ILogger";
+import { servicesContainer } from "./types/servicesContainer";
 
 export type engineSelectFunc = (
   bundle: string,
@@ -59,6 +61,7 @@ export interface BrpConfig {
    * Additional express middlewares.
    */
   middlewares?: middlewareConfig[];
+  logger?: ILogger;
 }
 
 export class BemRenderProxy {
@@ -70,12 +73,14 @@ export class BemRenderProxy {
   private defaultEngine: Renderer;
   private readonly backends: Record<string, IBackend> = {};
   private backendSelectFunc?: backendSelectFunc;
+  private readonly _logger: ILogger;
   private static engineSymbol = Symbol("engine");
   static logFormat =
     ":method :url :status - :response-time ms (backend :backend-time ms) (render :render-time ms) backend :backend";
 
   constructor(brpConf: BrpConfig) {
     this.config = brpConf.config;
+    this._logger = brpConf.logger || console;
     this.initLogger();
     this.errorHandler = new ErrorHandler([
       new StderrChannel({ debug: Boolean(this.config.APP_DEBUG) }),
@@ -101,6 +106,13 @@ export class BemRenderProxy {
       .use(cookieParser());
     this.initStatic(brpConf.static);
 
+    this.app.use((req, res, next) => {
+      const container = this.getServicesContainer();
+      Object.defineProperty(req, "_brp", { value: container });
+      Object.defineProperty(res, "_brp", { value: container });
+      next();
+    });
+
     this.addMiddlewares(Phases.beforeBackend, brpConf.middlewares);
 
     this.app.use(this.selectBackend.bind(this)).use(
@@ -125,7 +137,7 @@ export class BemRenderProxy {
   public start(port = this.config.APP_PORT): void {
     this.showInfo();
     this.app.listen(port, () => {
-      console.log("bem-render-proxy ready on", port);
+      this._logger.log("bem-render-proxy ready on", port);
     });
   }
 
@@ -172,9 +184,9 @@ export class BemRenderProxy {
   }
 
   private showInfo() {
-    console.log("Run in", this.config.APP_ENV, "mode");
-    console.log("USE_CACHE:", this.config.USE_CACHE);
-    console.log("DEBUG:", this.config.APP_DEBUG);
+    this._logger.log("Run in", this.config.APP_ENV, "mode");
+    this._logger.log("USE_CACHE:", this.config.USE_CACHE);
+    this._logger.log("DEBUG:", this.config.APP_DEBUG);
   }
 
   private initLogger() {
@@ -199,6 +211,10 @@ export class BemRenderProxy {
     middlewares
       .filter((conf) => conf.phase === phase)
       .forEach((conf) => this.app.use(conf.middleware));
+  }
+
+  private getServicesContainer(): servicesContainer {
+    return { logger: this._logger, errorHandler: this.errorHandler };
   }
 
   private handleRequest(req: Request, res: Response) {

@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import { IRequest } from "../types/IRequest";
 
 export interface IErrorsHandlerOpts {
   code?: number;
@@ -19,11 +20,11 @@ export class StderrChannel implements ErrorChannel {
     this.debug = Boolean(config.debug);
   }
 
-  send(req: Request, res: Response, opts: IErrorsHandlerOpts): void {
+  send(req: IRequest, res: Response, opts: IErrorsHandlerOpts): void {
     if (this.debug && opts.error) {
       throw opts.error;
     } else {
-      console.error(JSON.stringify(opts, null, 2));
+      req._brp.logger.error(JSON.stringify(opts, null, 2));
     }
   }
 }
