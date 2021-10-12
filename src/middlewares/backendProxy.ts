@@ -1,39 +1,34 @@
-import { Request, Response, NextFunction, RequestHandler } from "express";
-import { IncomingMessage } from "http";
+import { NextFunction, RequestHandler } from "express";
 import { bypassHeaders } from "../utils/bypassHeaders";
-import { ErrorHandler } from "../utils/errors-handler";
 import { IBackend } from "../types/IBackend";
+import { IRequest, IResponse } from "../types/IRequest";
 
-export interface BackendProxyOptions {
-  errorHandler: ErrorHandler;
-}
 export const backendData = Symbol("backendData");
-export const backendTime = Symbol("backendTime");
 export const backendSymbol = Symbol("backend");
 
-export const backendProxy = (conf: BackendProxyOptions): RequestHandler => (
-  req: Request,
-  res: Response,
+export const backendProxy = (): RequestHandler => (
+  req: IRequest,
+  res: IResponse,
   next: NextFunction
 ): void => {
-  req[backendTime] = new Date();
+  req._brp.statsCollector.fixTime("backend");
 
   const backend: IBackend = req[backendSymbol];
   const backendRequest = backend.proxy(
     req,
     (backendMsg) => {
-      res[backendTime] = new Date();
+      req._brp.statsCollector.fixTime("backend");
       res.writeHead(backendMsg.statusCode, backendMsg.headers);
       backendMsg.pipe(res);
     },
     (backendResponse, body) => {
-      res[backendTime] = new Date();
+      req._brp.statsCollector.fixTime("backend");
       res.status(backendResponse.statusCode);
       bypassHeaders(backendResponse, res);
       try {
         res[backendData] = backend.parse(body);
       } catch (error) {
-        conf.errorHandler.handle(req, res, {
+        req._brp.errorHandler.handle(req, res, {
           code: 502,
           type: "Backend data format error",
           error,
@@ -45,28 +40,10 @@ export const backendProxy = (conf: BackendProxyOptions): RequestHandler => (
   );
 
   backendRequest.on("error", (error) => {
-    conf.errorHandler.handle(req, res, {
+    req._brp.errorHandler.handle(req, res, {
       code: 502,
       type: "Backend request error",
       error,
     });
   });
 };
-
-export function calcBackendTime(req: Request, res: Response): string {
-  if (!req[backendTime] || !res[backendTime]) {
-    // missing request and/or response start time
-    return;
-  }
-
-  // calculate diff
-  const ms = res[backendTime] - req[backendTime];
-
-  // return truncated value
-  return ms.toFixed(3);
-}
-
-function bypassResponse(from: IncomingMessage, to: Response): void {
-  to.writeHead(from.statusCode, from.headers);
-  from.pipe(to);
-}

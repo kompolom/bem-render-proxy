@@ -1,7 +1,6 @@
 import path from "path";
 import { readFileSync } from "fs";
 import { IRendererSettings, Renderer } from "./Renderer";
-import { Response } from "express";
 import { ParamsDictionary } from "express-serve-static-core";
 import { IBackendData } from "../types/IBackendData";
 import { FreezeMapper } from "../utils/freeze-map";
@@ -10,7 +9,7 @@ import { BundleScheme } from "../utils/bundle-scheme";
 import { jsonCut } from "../utils/json-cut";
 import { JsonRenderer } from "./Json";
 import { iBEMHTML, iBEMTREE, iBEMXJST } from "../types/BEMXJST";
-import { IRequest } from "../types/IRequest";
+import { IRequest, IResponse } from "../types/IRequest";
 import { ILogger } from "../types/ILogger";
 
 interface IClassicSettings extends IRendererSettings {
@@ -54,7 +53,7 @@ export class ClassicRenderer extends Renderer {
 
   async render(
     req: IRequest,
-    res: Response,
+    res: IResponse,
     data: IBackendData
   ): Promise<void> {
     this.fixStart(req);
@@ -81,8 +80,8 @@ export class ClassicRenderer extends Renderer {
 
       // @ts-ignore
       if (cached && new Date() - cached.timestamp < this.settings.cacheTTL) {
-        res.send(cached.html);
         this.fixEnd(res);
+        res.send(cached.html);
         resolve();
       }
 
@@ -168,8 +167,8 @@ export class ClassicRenderer extends Renderer {
           html,
         });
       }
-      res.send(html);
       this.fixEnd(res);
+      res.send(html);
       resolve();
     });
   }

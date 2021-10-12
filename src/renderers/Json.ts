@@ -1,6 +1,6 @@
 import { Renderer, IRendererSettings } from "./Renderer";
-import { Response, Request } from "express";
 import { IBackendData } from "../types/IBackendData";
+import { IRequest, IResponse } from "../types/IRequest";
 
 export interface IJsonSettings extends IRendererSettings {
   wrap?: boolean;
@@ -13,7 +13,11 @@ export class JsonRenderer extends Renderer {
   constructor(settings?: IJsonSettings) {
     super(settings, defaultSettings);
   }
-  async render(req: Request, res: Response, data: IBackendData): Promise<void> {
+  async render(
+    req: IRequest,
+    res: IResponse,
+    data: IBackendData
+  ): Promise<void> {
     return new Promise((resolve, reject) => {
       this.fixStart(req);
       try {

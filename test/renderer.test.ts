@@ -1,10 +1,11 @@
 import { Response, Request } from "express";
-import { JsonRenderer } from "../src/renderers/Json";
-import { ClassicRenderer } from "../src/renderers/Classic";
+import { JsonRenderer, ClassicRenderer, IRequest, IResponse } from "../src";
 import { IBackendData } from "../src/types/IBackendData";
+import { StatsCollector } from "../src/middlewares/StatsCollector";
+jest.mock("../src/middlewares/StatsCollector");
 
 describe("ClassicRenderer", () => {
-  let renderer, mockReq, mockRes, loadTemplateSpy, renderData: IBackendData;
+  let renderer, mockReq, mockRes, loadTemplateSpy, renderData: IBackendData, sc;
   beforeEach(() => {
     renderer = new ClassicRenderer({
       bundleFormat: "{platform}",
@@ -19,11 +20,15 @@ describe("ClassicRenderer", () => {
       description: "",
       data: {},
     };
-    mockReq = {} as Request;
+    mockReq = {} as IRequest;
     mockRes = ({
       send: jest.fn(),
       json: jest.fn(),
-    } as unknown) as Response;
+    } as unknown) as IResponse;
+    sc = {
+      statsCollector: new StatsCollector(mockReq, mockRes),
+    };
+    mockReq._brp = mockRes._brp = sc;
 
     loadTemplateSpy = jest
       .spyOn(renderer, "loadTemplate")
@@ -66,7 +71,7 @@ describe("ClassicRenderer", () => {
 });
 
 describe("JsonRenderer", () => {
-  let renderer, mockReq, mockRes;
+  let renderer, mockReq, mockRes, sc;
   beforeEach(() => {
     renderer = new JsonRenderer();
     mockReq = {} as Request;
@@ -74,6 +79,10 @@ describe("JsonRenderer", () => {
       json: jest.fn(),
       send: jest.fn(),
     } as unknown) as Response;
+    sc = {
+      statsCollector: new StatsCollector(mockReq, mockRes),
+    };
+    mockReq._brp = mockRes._brp = sc;
   });
 
   it("should have render method", () => {
