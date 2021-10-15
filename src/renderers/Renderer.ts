@@ -1,34 +1,37 @@
-import { Request, Response } from "express";
 import { ParamsDictionary } from "express-serve-static-core";
 import { IBackendData } from "../types/IBackendData";
-import { fixTime } from "../utils/render-time";
+import { ILogger } from "../types/ILogger";
+import { IRequest, IResponse } from "../types/IRequest";
 
 export interface IRendererSettings {
   debug?: boolean;
+  logger?: ILogger;
 }
 
 export abstract class Renderer {
   protected settings: IRendererSettings;
+  protected logger: ILogger;
 
   constructor(
     settings: Partial<IRendererSettings>,
     defaults: Partial<IRendererSettings>
   ) {
     this.settings = { ...defaults, ...settings };
+    this.logger = this.settings.logger || console;
   }
 
   public abstract render(
-    req: Request,
-    res: Response,
+    req: IRequest,
+    res: IResponse,
     data: IBackendData
   ): Promise<void>;
 
-  protected fixStart(req: Request): void {
-    fixTime(req);
+  protected fixStart(req: IRequest): void {
+    req._brp.statsCollector.fixTime("render");
   }
 
-  protected fixEnd(res: Response): void {
-    fixTime(res);
+  protected fixEnd(res: IResponse): void {
+    res._brp.statsCollector.fixTime("render");
   }
 
   protected getEnv(): ParamsDictionary {

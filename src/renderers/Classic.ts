@@ -1,7 +1,6 @@
 import path from "path";
 import { readFileSync } from "fs";
 import { IRendererSettings, Renderer } from "./Renderer";
-import { Request, Response } from "express";
 import { ParamsDictionary } from "express-serve-static-core";
 import { IBackendData } from "../types/IBackendData";
 import { FreezeMapper } from "../utils/freeze-map";
@@ -10,6 +9,8 @@ import { BundleScheme } from "../utils/bundle-scheme";
 import { jsonCut } from "../utils/json-cut";
 import { JsonRenderer } from "./Json";
 import { iBEMHTML, iBEMTREE, iBEMXJST } from "../types/BEMXJST";
+import { IRequest, IResponse } from "../types/IRequest";
+import { ILogger } from "../types/ILogger";
 
 interface IClassicSettings extends IRendererSettings {
   lang?: string;
@@ -40,7 +41,8 @@ export class ClassicRenderer extends Renderer {
     this.freezeMap = this.settings.freezeMap
       ? ClassicRenderer.loadFreezeMap(
           this.settings.freezeMap,
-          this.settings.normalizeFreezeMap
+          this.settings.normalizeFreezeMap,
+          this.logger
         )
       : new FreezeMapper();
 
@@ -49,7 +51,11 @@ export class ClassicRenderer extends Renderer {
     }
   }
 
-  async render(req: Request, res: Response, data: IBackendData): Promise<void> {
+  async render(
+    req: IRequest,
+    res: IResponse,
+    data: IBackendData
+  ): Promise<void> {
     this.fixStart(req);
     return new Promise((resolve, reject) => {
       if (
@@ -74,8 +80,9 @@ export class ClassicRenderer extends Renderer {
 
       // @ts-ignore
       if (cached && new Date() - cached.timestamp < this.settings.cacheTTL) {
+        this.fixEnd(res);
         res.send(cached.html);
-        resolve(this.fixEnd(res));
+        resolve();
       }
 
       // Выбор бандла и платформы
@@ -160,8 +167,9 @@ export class ClassicRenderer extends Renderer {
           html,
         });
       }
+      this.fixEnd(res);
       res.send(html);
-      resolve(this.fixEnd(res));
+      resolve();
     });
   }
 
@@ -200,15 +208,16 @@ export class ClassicRenderer extends Renderer {
 
   private static loadFreezeMap(
     mapPath: string,
-    NORMALIZE_FREEZE_URLS?: boolean
+    NORMALIZE_FREEZE_URLS?: boolean,
+    logger?: ILogger
   ): FreezeMapper {
     const file = path.resolve(mapPath);
     try {
       const map = JSON.parse(readFileSync(file, "utf8"));
-      console.log("Use freeze map", file);
+      logger && logger.log("Use freeze map", file);
       return new FreezeMapper(map, NORMALIZE_FREEZE_URLS);
     } catch (e) {
-      console.error("Unable to load", file, "\n", e.message);
+      logger && logger.error("Unable to load", file, "\n", e.message);
       return new FreezeMapper();
     }
   }

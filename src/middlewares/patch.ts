@@ -1,9 +1,10 @@
-import { Request, Response, NextFunction, RequestHandler } from "express";
+import { Response, NextFunction, RequestHandler } from "express";
 import { backendData } from "./backendProxy";
 import { applyPatches } from "../utils/apply-patches";
+import { IRequest } from "../types/IRequest";
 
 export const patch = (enabled: boolean): RequestHandler => (
-  req: Request,
+  req: IRequest,
   res: Response,
   next: NextFunction
 ): void => {

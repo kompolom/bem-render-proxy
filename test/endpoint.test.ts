@@ -1,10 +1,27 @@
 import request from "supertest";
-import { config } from "../src/cfg";
-import { BemRenderProxy } from "../src";
+import { config } from "../src";
+import { BemRenderProxy, ClassicBackend, ILogger } from "../src";
 import { mockBackend } from "./mockServer/server";
-import { ClassicBackend } from "../src";
 
 class MockBackend extends ClassicBackend {}
+class FakeLogger implements ILogger {
+  debug() {
+    jest.fn();
+  }
+  log() {
+    jest.fn();
+  }
+  info() {
+    jest.fn();
+  }
+
+  warn() {
+    jest.fn();
+  }
+  error() {
+    jest.fn();
+  }
+}
 
 const app = new BemRenderProxy({
   config: config,
@@ -15,6 +32,7 @@ const app = new BemRenderProxy({
       host: config.BACKEND_HOST,
     }),
   ],
+  logger: new FakeLogger(),
 }).app;
 
 describe("app", () => {
@@ -65,6 +83,7 @@ describe("app", () => {
             host: config.BACKEND_HOST,
           }),
         ],
+        logger: new FakeLogger(),
       }).app;
     });
 
