@@ -135,7 +135,7 @@ export class BemRenderProxy {
   public start(port = this.config.APP_PORT): void {
     this.showInfo();
     this.app.listen(port, () => {
-      this._logger.log("bem-render-proxy ready on", port);
+      this._logger.info("bem-render-proxy ready on", port);
     });
   }
 
@@ -187,8 +187,8 @@ export class BemRenderProxy {
   }
 
   private showInfo() {
-    this._logger.log("Run in", this.config.APP_ENV, "mode");
-    this._logger.log("DEBUG:", this.config.APP_DEBUG);
+    this._logger.info("Run in", this.config.APP_ENV, "mode");
+    this._logger.info("DEBUG:", this.config.APP_DEBUG);
   }
 
   private initStatic(staticMap?: ParamsDictionary): void {

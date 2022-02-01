@@ -29,7 +29,7 @@ export class StatsManager {
 
   private _onRequestEnd(res: IResponse) {
     const stats = res._brp.statsCollector.getStats();
-    this.logger.info(stats);
+    this.logger.log(stats);
   }
 
   private _onHeaders(res: IResponse): void {

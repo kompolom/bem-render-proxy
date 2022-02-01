@@ -24,7 +24,7 @@ export class StderrChannel implements ErrorChannel {
     if (this.debug && opts.error) {
       throw opts.error;
     } else {
-      req._brp.logger.error(JSON.stringify(opts, null, 2));
+      req._brp.logger.error(opts);
     }
   }
 }
