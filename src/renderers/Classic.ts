@@ -116,7 +116,7 @@ export class ClassicRenderer extends Renderer {
         BEMTREE = this.loadBEMTREE(bundle, data.lang);
         BEMHTML = this.loadBEMHTML(bundle, data.lang);
       } catch (err) {
-        reject({
+        return reject({
           code: 424,
           type: data.bundleUrl + " error",
           error: err,
@@ -133,7 +133,7 @@ export class ClassicRenderer extends Renderer {
         this.injectFuncToBEMXJST(BEMTREE);
         bemjson = BEMTREE.apply(bemtreeCtx);
       } catch (err) {
-        reject({
+        return reject({
           code: 500,
           type: "BEMTREE error",
           error: err,
@@ -153,7 +153,7 @@ export class ClassicRenderer extends Renderer {
       try {
         html = BEMHTML.apply(bemjson);
       } catch (err) {
-        reject({
+        return reject({
           code: 500,
           type: "BEMHTML error",
           error: err,
