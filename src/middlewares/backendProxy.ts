@@ -24,7 +24,10 @@ export const backendProxy = (): RequestHandler => (
     (backendResponse, body) => {
       req._brp.statsCollector.fixTime("backend");
       res.status(backendResponse.statusCode);
-      bypassHeaders(backendResponse, res);
+      bypassHeaders(backendResponse, res, [
+        "content-type",
+        "transfer-encoding",
+      ]);
       try {
         res[backendData] = backend.parse(body);
       } catch (error) {

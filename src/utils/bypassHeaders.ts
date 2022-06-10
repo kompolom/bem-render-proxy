@@ -1,15 +1,12 @@
 import { IncomingMessage, OutgoingMessage } from "http";
 
-const BLACKLISTED_HEADERS = {
-  "content-type": true,
-};
-
 export function bypassHeaders(
   from: IncomingMessage,
-  to: OutgoingMessage
+  to: OutgoingMessage,
+  blacklisted: string[] = []
 ): void {
   for (const headerName of Object.keys(from.headers)) {
-    if (BLACKLISTED_HEADERS[headerName]) continue;
+    if (blacklisted.includes(headerName.toLowerCase())) continue;
 
     to.setHeader(headerName, from.headers[headerName]);
   }

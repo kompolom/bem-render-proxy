@@ -11,5 +11,5 @@ mockBackend.get("/render", (req, res) => {
   res
     .status(200)
     .setHeader("Content-Type", "application/bem+json; charset=utf-8");
-  res.end(routesData["/"]);
+  res.send(routesData["/"]);
 });

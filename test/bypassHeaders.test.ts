@@ -9,12 +9,8 @@ describe("bypassHeaders", () => {
     },
   } as unknown) as http.IncomingMessage;
   let to = new http.OutgoingMessage();
-  let BLACKLISTED_HEADERS;
 
   beforeEach(() => {
-    BLACKLISTED_HEADERS = {
-      "content-type": true,
-    };
     to = new http.OutgoingMessage();
   });
 
@@ -24,7 +20,7 @@ describe("bypassHeaders", () => {
   });
 
   it("Should not pass `content-type` header", () => {
-    bypassHeaders(from, to);
+    bypassHeaders(from, to, ["content-type"]);
     expect(to.getHeader("content-type")).toBeUndefined();
   });
 });
